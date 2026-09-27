@@ -1,0 +1,4 @@
+.streamlit/secrets.toml
+wapas_cases.db
+__pycache__/
+.venv/

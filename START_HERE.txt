@@ -1,0 +1,140 @@
+WAPAS: HOW TO SET UP AND RUN THE APP
+====================================
+
+What's in this folder
+---------------------
+app.py              The screens (what people see). Built with Streamlit.
+wapas_logic.py      The backend: talks to the AI, reads the SMS, writes letters, saves cases.
+rules.csv           Our real data: rules from court orders and government SOPs, with sources.
+.streamlit/         Settings. secrets.toml holds your API key (keep it private).
+START_WAPAS.bat     Double-click this to start the app on Windows.
+start_mac.command   Double-click this to start the app on a Mac.
+wapas_cases.db      The database of saved cases. It appears by itself the first time you save a case.
+
+
+STEP 1. Install Python (one time, about 5 minutes)
+--------------------------------------------------
+1. Go to https://www.python.org/downloads and download the latest Python.
+2. Open the installer.
+3. IMPORTANT: on the first screen, tick the box "Add python.exe to PATH".
+4. Click "Install Now".
+
+(Mac: install from the same website. No PATH box to tick.)
+
+
+STEP 2. Unzip the folder
+------------------------
+Right-click the zip file, choose "Extract All", and put the "wapas" folder on your Desktop.
+
+
+STEP 3. Get a free AI key (about 3 minutes)
+-------------------------------------------
+1. Go to https://aistudio.google.com and sign in with a Google account.
+2. Click "Get API key", then "Create API key".
+3. Copy the key.
+
+Keep the key secret. Don't send it in group chats or upload it anywhere.
+Anyone who has it can use your account.
+
+
+STEP 4. Put your key in the app
+-------------------------------
+1. Open the "wapas" folder, then the ".streamlit" folder.
+2. Right-click "secrets.toml", choose "Open with", then "Notepad".
+3. Paste your key between the quotes on the API_KEY line, like this:
+       API_KEY = "AIza...your key..."
+4. Save and close.
+
+(Shortcut: you can skip this step and paste the key into the "API key" box
+in the app's sidebar instead. You'd have to paste it each time you start.)
+
+
+STEP 5. Start the app
+---------------------
+1. Double-click START_WAPAS.bat.
+2. The first time, it installs what the app needs. This needs internet and
+   takes a few minutes. After that, it starts quickly.
+3. If the black window asks for your email, just press Enter.
+4. Your browser opens the app. If it doesn't, type this into your browser:
+       http://localhost:8501
+5. Keep the black window open. Closing it stops the app.
+
+(Mac: double-click start_mac.command. If the Mac blocks it, right-click it,
+choose "Open", then "Open" again.)
+
+
+STEP 6. Check that the AI works
+-------------------------------
+In the sidebar, click "Test AI connection".
+- "AI is working" means you're done.
+- If the error mentions the MODEL: open AI Studio, find a current "Flash"
+  model name, and paste it into the "Model name" box in the sidebar
+  (or into MODEL in secrets.toml).
+- If the error mentions the KEY: check that you copied the whole key.
+- If the AI fails, the app still works using fixed templates.
+  You'll see "fixed template (AI off)" under the letter.
+
+
+TRY IT (do this before the event)
+---------------------------------
+1. New case tab: click "Use example SMS", then "Read my message".
+   The details (bank, amount, date, police station) fill in automatically.
+2. Type a name. Answer the three questions: Yes, No, No.
+3. Click "Show my plan and letter". Read the plan and the letter.
+4. Click "Explain this plan in simple Kannada" (choose Kannada in the sidebar).
+5. Click "Save this case", then open the "My cases" tab.
+6. Click "Simulate day 15" to see the reminder and follow-up letter.
+7. Rules tab: change the text of a rule, click "Save rules". Go back to
+   the New case tab and click "Rewrite letter". The letter uses the new rule.
+8. Try answering "Yes" to "Did you ever let someone else use your bank
+   account?" It should NOT give a letter.
+9. Change the example SMS (different bank, amount or date) and click
+   "Read my message" again. The AI should pick up the new details.
+   This is the best way to show judges the AI is real.
+
+Before the demo, use "Reset demo data" in the My cases tab to clear test cases.
+
+
+COMMON PROBLEMS
+---------------
+"python is not recognized" or the window says Python is not installed:
+   Run the Python installer again and tick "Add python.exe to PATH".
+
+The window closes straight away:
+   Right-click START_WAPAS.bat, choose "Edit", and check nothing was changed.
+   Or open the folder, click the address bar, type cmd, press Enter, and type:
+       python -m pip install -r requirements.txt
+       python -m streamlit run app.py
+   Then read the error message (or paste it to Claude).
+
+The browser shows an error in red:
+   Copy the error text and paste it to Claude with "I got this error".
+
+The AI stops working during the demo:
+   Keep going. The app switches to fixed templates automatically.
+   Say: "Our app falls back to verified templates if the AI is unavailable."
+
+
+USING OPENAI OR CLAUDE INSTEAD OF GEMINI
+----------------------------------------
+Change PROVIDER in secrets.toml to "openai" or "anthropic", and paste that
+company's API key. These need paid credits. Gemini has a free tier.
+
+
+ON THE DAY
+----------
+- The AI needs internet. Bring a phone hotspot.
+- Start the app BEFORE your turn and keep the black window open.
+- Record a backup video of the demo (Windows + G on Windows, Cmd + Shift + 5 on Mac).
+- Bring this folder on a pen drive too.
+
+
+HOW TO EXPLAIN IT TO JUDGES (in your own words)
+-----------------------------------------------
+"The screens are built in Python with Streamlit. The backend sends the bank
+SMS to Google's Gemini AI through its API, which pulls out the details. Then
+it writes a personalised letter using only the rules in our rules table,
+which we collected from real court orders and government SOPs. Cases are
+saved in a SQLite database. The API key stays on the backend, and if the AI
+fails, the app falls back to fixed templates. We never store the full
+account number or the SMS."

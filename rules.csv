@@ -1,0 +1,8 @@
+id,rule,source,applies_to,use_in_letter,last_verified
+R1,"Ask your bank for the freeze details: the police station, the case or FIR number, the date of the request, and the legal sections used.","Legal explainer, CourtKutchehry (2026)",frozen,no,2026-09-25
+R2,"Several High Courts (Kerala, Oct 2023; Rajasthan; Andhra Pradesh, June 2026) have said only the disputed amount should be held, not the whole account. A new RBI circular also supports this.","High Court orders as reported by MediaNama, Jul 2026",frozen,yes,2026-09-25
+R3,The Ministry of Home Affairs SOP dated 2 January 2026 (Clause 10) sets out how grievances of account holders are resolved. The Grievance Redressal Module has been working since April 2026.,"SCC Online, 18 Sep 2026",frozen,yes,2026-09-25
+R4,The Supreme Court (order of 4 August 2026) said people whose accounts are frozen should first use the official grievance redressal mechanism.,"Supreme Court order as reported by Bar and Bench, Aug 2026",frozen,yes,2026-09-25
+R5,"If you were scammed, report it immediately on the National Cybercrime Helpline 1930 or at cybercrime.gov.in.",National Cybercrime Reporting Portal,scammed,no,2026-09-25
+R6,"If you let someone else use your bank account or UPI, contact free legal aid straight away (NALSA helpline 15100). Do not claim that you are innocent.",NALSA (check the helpline number before the event),lent,no,2026-09-25
+R7,"Wapas will never ask for money, OTPs, PINs or passwords.",Wapas safety rule,all,no,2026-09-25

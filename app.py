@@ -35,6 +35,29 @@ st.markdown(
       .stTabs [aria-selected="true"] { color: #B94A0A; }
       .stTabs [data-baseweb="tab-highlight"] { background-color: #B94A0A; }
 
+      /* Easy to tap: buttons, tabs, answer options and expanders are at least 44px tall */
+      [data-testid="stButton"] button, [data-testid="stDownloadButton"] button,
+      [data-testid="stLinkButton"] a { min-height: 3rem; }
+      .stTabs [data-testid="stTab"] { min-height: 3rem; }
+      /* 16px inside fields, so iPhones don't zoom the page when you tap one */
+      [data-testid="stTextInput"] input, [data-testid="stTextArea"] textarea { font-size: 1rem; }
+      /* The small link icons next to headings are not needed here */
+      [data-testid="stHeaderActionElements"] { display: none; }
+      [data-testid="stRadio"] label[data-baseweb="radio"] { min-height: 2.75rem; align-items: center; }
+      [data-testid="stExpander"] summary { min-height: 3rem; }
+
+      /* Long words (case numbers, links) wrap instead of pushing the page sideways */
+      [data-testid="stMarkdownContainer"], [data-testid="stCaptionContainer"] { overflow-wrap: break-word; }
+
+      /* On a phone, Streamlit stacks columns; make each button fill the width so it is easy to hit */
+      @media (max-width: 640px) {
+        div:has(> [data-testid="stButton"]), div:has(> [data-testid="stDownloadButton"]),
+        div:has(> [data-testid="stLinkButton"]), [data-testid="stButton"],
+        [data-testid="stDownloadButton"], [data-testid="stLinkButton"] { width: 100%; }
+        [data-testid="stButton"] button, [data-testid="stDownloadButton"] button,
+        [data-testid="stLinkButton"] a { width: 100%; }
+      }
+
       /* The opening: name, meaning, promise, three steps */
       div.wapas-hero { margin: 0.5rem 0 1rem 0; }
       div.wapas-hero h1.wapas-name { font-size: 3.25rem; line-height: 1.05; font-weight: 800;
@@ -257,14 +280,16 @@ with tab_new:
                         "Your bank's message may show its number, or another reference number.\n"
                         "- **Debit freeze**: the bank stops money from going out of your account.")
 
+        # Each column is filled top to bottom, so on a phone (one column) the order reads
+        # name, bank, branch, last 4, amount, date, police, case number.
         c1, c2 = st.columns(2)
         c1.text_input("Your full name", key="f_name")
-        c2.text_input("Bank", key="f_bank")
+        c1.text_input("Bank", key="f_bank")
         c1.text_input("Branch", key="f_branch")
-        c2.text_input("Account: last 4 digits only", key="f_last4", max_chars=4)
-        c1.text_input("Amount in dispute", key="f_amount")
+        c1.text_input("Account: last 4 digits only", key="f_last4", max_chars=4)
+        c2.text_input("Amount in dispute", key="f_amount")
         c2.text_input("Date of freeze", key="f_freeze_date")
-        c1.text_input("Police station or cyber cell", key="f_police")
+        c2.text_input("Police station or cyber cell", key="f_police")
         c2.text_input("Case, FIR or reference number", key="f_case_no")
 
         st.subheader("3. Answer three questions")

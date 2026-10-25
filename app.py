@@ -8,7 +8,7 @@ This file only draws the screens. All the real work (AI, rules, letters,
 database) happens in wapas_logic.py.
 """
 
-from datetime import date
+from datetime import date, timedelta
 
 import pandas as pd
 import streamlit as st
@@ -39,34 +39,45 @@ def secret(name, default=""):
         return default
 
 
+# Owner mode: add ADMIN_MODE = true to your local .streamlit/secrets.toml to see the
+# AI settings and edit the rules. Leave it out on the public site.
+admin = str(secret("ADMIN_MODE")).strip().lower() in ("true", "1", "yes")
+
+# On the public site the AI settings come only from Streamlit's Secrets settings
+providers = ["gemini", "openai", "anthropic"]
+saved_provider = secret("PROVIDER", "gemini")
+provider = saved_provider if saved_provider in providers else "gemini"
+api_key = secret("API_KEY")
+model = secret("MODEL") or L.DEFAULT_MODELS[provider]
+
 # ---------------------------------------------------------------------------
-# Sidebar: AI settings
+# Sidebar: settings (AI settings only in owner mode)
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.header("Settings")
-    providers = ["gemini", "openai", "anthropic"]
-    saved_provider = secret("PROVIDER", "gemini")
-    provider = st.selectbox(
-        "AI provider", providers,
-        index=providers.index(saved_provider) if saved_provider in providers else 0,
-    )
-    typed_key = st.text_input("API key", type="password",
-                              help="Leave this empty if you saved your key in .streamlit/secrets.toml")
-    api_key = typed_key.strip() or secret("API_KEY")
+    if admin:
+        provider = st.selectbox(
+            "AI provider", providers,
+            index=providers.index(saved_provider) if saved_provider in providers else 0,
+        )
+        typed_key = st.text_input("API key", type="password",
+                                  help="Leave this empty if you saved your key in .streamlit/secrets.toml")
+        api_key = typed_key.strip() or secret("API_KEY")
 
-    default_model = secret("MODEL") if provider == saved_provider and secret("MODEL") else L.DEFAULT_MODELS[provider]
-    model = st.text_input("Model name", value=default_model,
-                          help="If you get a 'model not found' error, copy a current model name from your provider's website.")
+        default_model = secret("MODEL") if provider == saved_provider and secret("MODEL") else L.DEFAULT_MODELS[provider]
+        model = st.text_input("Model name", value=default_model,
+                              help="If you get a 'model not found' error, copy a current model name from your provider's website.")
     language = st.radio("Explain my plan in", ["English", "Kannada"], horizontal=True)
 
-    if st.button("Test AI connection"):
-        with st.spinner("Checking..."):
-            answer, error = L.ask_ai(provider, api_key, model, "Reply with the single word: connected")
-        if answer:
-            st.success(f"AI is working ({model}).")
-        else:
-            st.error(error)
-    st.caption("If the AI is off or fails, Wapas uses fixed templates, so the app keeps working.")
+    if admin:
+        if st.button("Test AI connection"):
+            with st.spinner("Checking..."):
+                answer, error = L.ask_ai(provider, api_key, model, "Reply with the single word: connected")
+            if answer:
+                st.success(f"AI is working ({model}).")
+            else:
+                st.error(error)
+        st.caption("If the AI is off or fails, Wapas uses fixed templates, so the app keeps working.")
 
 ai_on = bool(api_key)
 
@@ -80,15 +91,20 @@ st.markdown(
     "Wapas never asks for money, OTPs or passwords.</div>",
     unsafe_allow_html=True,
 )
-st.caption(f"AI is on ({provider}, {model})." if ai_on
-           else "AI is off, so Wapas is using fixed templates. Add an API key in the sidebar to turn it on.")
+if ai_on:
+    st.caption(f"AI is on ({provider}, {model}).")
+elif admin:
+    st.caption("AI is off, so Wapas is using fixed templates. Add an API key in the sidebar to turn it on.")
+else:
+    st.caption("Wapas is using its built-in letter templates right now.")
 
 rules_df = L.load_rules()
 
 # Remember things between clicks (Streamlit re-runs this file on every click)
 defaults = {"details_ready": False, "show_result": False, "letter_ready": False,
             "extract_method": "", "extract_error": None, "letter_method": "",
-            "rules_version": 0, "flash": None, "followups": {}, "plan_explained": None}
+            "rules_version": 0, "flash": None, "followups": {}, "plan_explained": None,
+            "my_cases": [], "case_count": 0}
 for key, value in defaults.items():
     st.session_state.setdefault(key, value)
 for field in ["name"] + L.DETAIL_FIELDS:
@@ -111,6 +127,27 @@ def start_new_case():
     st.session_state.plan_explained = None
 
 
+# Cases are kept only in this visitor's browser tab, never in a shared file,
+# so one visitor can never see another visitor's cases.
+def save_my_case(d, letter):
+    """Save a case for this visitor only. Only the last 4 digits of the account are kept."""
+    today = date.today()
+    st.session_state.case_count += 1
+    case = {"id": st.session_state.case_count, "created": today.isoformat()}
+    case.update({k: d.get(k, "") for k in ["name"] + L.DETAIL_FIELDS})
+    case["last4"] = L.only_last4(case["last4"])
+    case.update({"status": "Letter ready to send",
+                 "follow_up": (today + timedelta(days=15)).isoformat(), "letter": letter})
+    st.session_state.my_cases.insert(0, case)  # newest first
+    return case["id"]
+
+
+def update_my_case_status(case_id, status):
+    for case in st.session_state.my_cases:
+        if case["id"] == case_id:
+            case["status"] = status
+
+
 tab_new, tab_cases, tab_rules = st.tabs(["New case", "My cases", "Rules"])
 
 # ---------------------------------------------------------------------------
@@ -122,7 +159,9 @@ with tab_new:
         photo = st.file_uploader("Screenshot of the bank SMS", type=["png", "jpg", "jpeg", "webp"])
         if st.button("Read my screenshot", disabled=photo is None):
             if not ai_on:
-                st.warning("Reading screenshots needs the AI. Add an API key, or paste the SMS text below.")
+                st.warning("Reading screenshots needs the AI. Add an API key, or paste the SMS text below."
+                           if admin else
+                           "Reading screenshots isn't available right now. Please paste the SMS text below.")
             else:
                 with st.spinner("Reading your screenshot..."):
                     text, found, error = L.extract_from_screenshot(
@@ -218,7 +257,9 @@ with tab_new:
                 if st.button(f"Explain this plan in simple {language}"):
                     with st.spinner("Explaining..."):
                         text, error = L.explain_plan(plan_rules, language, provider, api_key, model)
-                    st.session_state.plan_explained = text or f"The AI couldn't explain this right now. {error}"
+                    st.session_state.plan_explained = text or (
+                        f"The AI couldn't explain this right now. {error}" if admin else
+                        "The AI couldn't explain this right now. The steps above are the full plan.")
                 if st.session_state.plan_explained:
                     st.info(st.session_state.plan_explained)
 
@@ -246,7 +287,7 @@ with tab_new:
                     st.session_state.letter_ready = False
                     st.rerun()
                 if b3.button("Save this case", type="primary"):
-                    case_id = L.save_case(details, st.session_state.letter_box)
+                    case_id = save_my_case(details, st.session_state.letter_box)
                     st.success(f"Saved as case #{case_id}. Open My cases to track it.")
 
                 subject = f"Request to limit the debit freeze on account ending {details['last4']}"
@@ -259,11 +300,13 @@ with tab_new:
         st.button("Start a new case", on_click=start_new_case)
 
 # ---------------------------------------------------------------------------
-# Tab 2: My cases (saved in the database)
+# Tab 2: My cases (kept only in this visitor's browser tab)
 # ---------------------------------------------------------------------------
 with tab_cases:
     st.subheader("Case tracker")
-    cases = L.load_cases()
+    st.caption("Your cases are saved in this browser tab only. Refreshing or closing the page "
+               "clears them, so download your letter to keep it.")
+    cases = pd.DataFrame(st.session_state.my_cases)
     if cases.empty:
         st.info("No saved cases yet. Save one from the New case tab.")
     else:
@@ -286,7 +329,7 @@ with tab_cases:
         current = statuses.index(case["status"]) if case["status"] in statuses else 0
         new_status = st.selectbox("Status", statuses, index=current, key=f"status_{chosen}")
         if st.button("Update status"):
-            L.update_status(chosen, new_status)
+            update_my_case_status(chosen, new_status)
             st.rerun()
 
         st.write(f"Next follow-up: **{case['follow_up']}**")
@@ -308,43 +351,61 @@ with tab_cases:
         with st.expander("See the first letter saved with this case"):
             st.text(case["letter"])
 
-        with st.expander("Reset demo data"):
-            if st.button("Delete all saved cases"):
-                L.delete_all_cases()
+        with st.expander("Delete my saved cases"):
+            confirm = st.checkbox("Yes, delete all the cases I saved in this tab")
+            if st.button("Delete my saved cases", disabled=not confirm):
+                st.session_state.my_cases = []
                 st.session_state.followups = {}
                 st.rerun()
 
 # ---------------------------------------------------------------------------
-# Tab 3: Rules (admin)
+# Tab 3: Rules (read-only for visitors, editable in owner mode)
 # ---------------------------------------------------------------------------
 with tab_rules:
     st.subheader("Rules Wapas uses")
-    st.write("Every plan and letter is built from this table. When a law or court order changes, "
-             "update the row here. No code changes needed.")
-    if st.session_state.flash:
-        st.success(st.session_state.flash)
-        st.session_state.flash = None
+    if not admin:
+        # Visitors can read the rules but never change them
+        st.write("Every plan and letter is built from this table. Each rule lists its source "
+                 "and the date it was last checked.")
+        st.dataframe(
+            rules_df,
+            hide_index=True,
+            column_config={
+                "id": st.column_config.TextColumn("ID", width="small"),
+                "rule": st.column_config.TextColumn("Rule", width="large"),
+                "source": st.column_config.TextColumn("Source", width="medium"),
+                "applies_to": st.column_config.TextColumn("Applies to"),
+                "use_in_letter": st.column_config.TextColumn("Use in letter"),
+                "last_verified": st.column_config.TextColumn("Last checked"),
+            },
+        )
+    else:
+        st.write("Every plan and letter is built from this table. When a law or court order changes, "
+                 "update the row here. No code changes needed.")
+        if st.session_state.flash:
+            st.success(st.session_state.flash)
+            st.session_state.flash = None
 
-    edited = st.data_editor(
-        rules_df,
-        num_rows="dynamic",
-        hide_index=True,
-        key=f"rules_editor_{st.session_state.rules_version}",
-        column_config={
-            "id": st.column_config.TextColumn("ID", width="small"),
-            "rule": st.column_config.TextColumn("Rule", width="large"),
-            "source": st.column_config.TextColumn("Source", width="medium"),
-            "applies_to": st.column_config.SelectboxColumn(
-                "Applies to", options=["frozen", "scammed", "lent", "all"]),
-            "use_in_letter": st.column_config.SelectboxColumn("Use in letter", options=["yes", "no"]),
-            "last_verified": st.column_config.TextColumn("Last checked"),
-        },
-    )
-    if st.button("Save rules", type="primary"):
-        edited = edited.copy()
-        edited["last_verified"] = edited["last_verified"].replace("", date.today().isoformat())
-        L.save_rules(edited)
-        st.session_state.rules_version += 1   # gives the table a fresh start
-        st.session_state.letter_ready = False  # next letter uses the new rules
-        st.session_state.flash = "Rules saved. New plans and letters will use them."
-        st.rerun()
+        edited = st.data_editor(
+            rules_df,
+            num_rows="dynamic",
+            hide_index=True,
+            key=f"rules_editor_{st.session_state.rules_version}",
+            column_config={
+                "id": st.column_config.TextColumn("ID", width="small"),
+                "rule": st.column_config.TextColumn("Rule", width="large"),
+                "source": st.column_config.TextColumn("Source", width="medium"),
+                "applies_to": st.column_config.SelectboxColumn(
+                    "Applies to", options=["frozen", "scammed", "lent", "all"]),
+                "use_in_letter": st.column_config.SelectboxColumn("Use in letter", options=["yes", "no"]),
+                "last_verified": st.column_config.TextColumn("Last checked"),
+            },
+        )
+        if st.button("Save rules", type="primary"):
+            edited = edited.copy()
+            edited["last_verified"] = edited["last_verified"].replace("", date.today().isoformat())
+            L.save_rules(edited)
+            st.session_state.rules_version += 1   # gives the table a fresh start
+            st.session_state.letter_ready = False  # next letter uses the new rules
+            st.session_state.flash = "Rules saved. New plans and letters will use them."
+            st.rerun()

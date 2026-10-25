@@ -3,3 +3,4 @@ wapas_cases.db
 __pycache__/
 .venv/
 .DS_Store
+.claude/

@@ -8,6 +8,7 @@ This file only draws the screens. All the real work (AI, rules, letters,
 database) happens in wapas_logic.py.
 """
 
+import re
 from datetime import date, timedelta
 
 import pandas as pd
@@ -48,6 +49,20 @@ st.markdown(
 
       /* Long words (case numbers, links) wrap instead of pushing the page sideways */
       [data-testid="stMarkdownContainer"], [data-testid="stCaptionContainer"] { overflow-wrap: break-word; }
+
+      /* Letter box: shorter on a phone so it fits the screen; it still scrolls inside */
+      @media (max-width: 640px) {
+        .st-key-letter_box, .st-key-letter_box [data-testid="stTextArea"],
+        .st-key-letter_box [data-testid="stTextAreaRootElement"] { height: auto !important; }
+        .st-key-letter_box textarea { height: min(55vh, 20rem) !important; }
+      }
+
+      /* Saved cases: a table on laptops, one small card per case on phones */
+      .st-key-cases_cards { display: none !important; }
+      @media (max-width: 640px) {
+        .st-key-cases_table { display: none !important; }
+        .st-key-cases_cards { display: flex !important; }
+      }
 
       /* On a phone, Streamlit stacks columns; make each button fill the width so it is easy to hit */
       @media (max-width: 640px) {
@@ -207,6 +222,12 @@ def save_my_case(d, letter):
                  "follow_up": (today + timedelta(days=15)).isoformat(), "letter": letter})
     st.session_state.my_cases.insert(0, case)  # newest first
     return case["id"]
+
+
+def plain(value):
+    """Show a saved value as plain text inside markdown (so typed symbols can't change the layout)."""
+    text = str(value).strip()
+    return re.sub(r"([\\`*_{}\[\]()#+\-.!|<>~$&])", r"\\\1", text) if text else "—"
 
 
 def update_my_case_status(case_id, status):
@@ -419,8 +440,16 @@ with tab_cases:
         st.caption("Cases by status")
         st.bar_chart(pd.Series(stats["by_status"], name="Cases"))
 
-        st.dataframe(cases[["id", "created", "name", "bank", "last4", "status", "follow_up"]],
-                     hide_index=True)
+        with st.container(key="cases_table"):  # shown on laptops
+            st.dataframe(cases[["id", "created", "name", "bank", "last4", "status", "follow_up"]],
+                         hide_index=True)
+        with st.container(key="cases_cards"):  # shown on phones, no sideways scrolling
+            for _, c in cases.iterrows():
+                with st.container(border=True):
+                    st.markdown(f"**Case #{c['id']}** · {plain(c['name'])}")
+                    st.markdown(f"{plain(c['bank'])}, account ending {plain(c['last4'])}")
+                    st.markdown(f"Status: **{plain(c['status'])}**")
+                    st.caption(f"Next follow-up: {c['follow_up']} · Saved: {c['created']}")
         chosen = st.selectbox("Open a case", cases["id"].tolist(), format_func=lambda i: f"Case #{i}")
         case = cases[cases["id"] == chosen].iloc[0].to_dict()
 

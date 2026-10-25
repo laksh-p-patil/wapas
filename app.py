@@ -18,11 +18,23 @@ import wapas_logic as L
 
 st.set_page_config(page_title="Wapas", page_icon="🔓", layout="centered")
 
-# A little styling so it reads well on a projector
+# Styling: type sizes, tap sizes, phone layout, and the opening
 st.markdown(
     """
     <style>
-      .stApp p, .stApp li, .stApp label { font-size: 1.05rem; }
+      /* Type. One family (Streamlit's own Source Sans); sizes and spacing tuned for phone and laptop */
+      .stApp p, .stApp li, .stApp label { font-size: 1.05rem; text-wrap: pretty; }
+      /* Lines of text stay a comfortable length on a wide screen */
+      [data-testid="stMarkdownContainer"] p { max-width: 70ch; line-height: 1.55; }
+      /* Captions carry sources and "check every detail", so they get a readable size */
+      [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p { font-size: 0.95rem; line-height: 1.5; }
+      /* Step headings are a little smaller on a phone, so they wrap less */
+      [data-testid="stMain"] h3 { font-size: clamp(1.35rem, 1.1rem + 1.2vw, 1.75rem); line-height: 1.25;
+                                  text-wrap: balance; }
+      /* The letter reads like a letter */
+      [data-testid="stTextArea"] textarea { line-height: 1.5; }
+      /* Numbers line up */
+      [data-testid="stMetricValue"], [data-testid="stDataFrame"] { font-variant-numeric: tabular-nums; }
 
       /* Hide Streamlit's own Deploy button and menu */
       [data-testid="stAppDeployButton"], [data-testid="stMainMenu"],
@@ -87,7 +99,7 @@ st.markdown(
       div.wapas-hero ol.wapas-steps span { color: #4A5468; font-size: 0.95rem; }
 
       .wapas-note { background:#FDE9DC; color:#7A2E07; padding:10px 14px; border-radius:8px;
-                    font-size:0.95rem; margin: 0.25rem 0 0.75rem 0; }
+                    font-size:1rem; line-height: 1.5; margin: 0.25rem 0 0.75rem 0; }
       .st-key-call_nalsa a { min-height: 3.5rem; font-size: 1.3rem; font-weight: 700; }
     </style>
     """,

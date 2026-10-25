@@ -24,6 +24,7 @@ st.markdown(
       .stApp p, .stApp li, .stApp label { font-size: 1.05rem; }
       .wapas-note { background:#FDE9DC; color:#7A2E07; padding:10px 14px; border-radius:8px;
                     font-size:0.95rem; margin: 0.25rem 0 0.75rem 0; }
+      .st-key-call_nalsa a { min-height: 3.5rem; font-size: 1.3rem; font-weight: 700; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -87,8 +88,8 @@ ai_on = bool(api_key)
 st.title("Wapas")
 st.write("Help for people whose bank account was frozen because of someone else's scam.")
 st.markdown(
-    '<div class="wapas-note">This is a demo prototype, not legal advice. '
-    "Wapas never asks for money, OTPs or passwords.</div>",
+    '<div class="wapas-note">Wapas never asks for money, OTPs, PINs or passwords. '
+    "This is a demo, so don't enter real bank details. It is not legal advice.</div>",
     unsafe_allow_html=True,
 )
 if ai_on:
@@ -104,7 +105,7 @@ rules_df = L.load_rules()
 defaults = {"details_ready": False, "show_result": False, "letter_ready": False,
             "extract_method": "", "extract_error": None, "letter_method": "",
             "rules_version": 0, "flash": None, "followups": {}, "plan_explained": None,
-            "my_cases": [], "case_count": 0}
+            "my_cases": [], "case_count": 0, "confirm_rewrite": False, "letter_original": ""}
 for key, value in defaults.items():
     st.session_state.setdefault(key, value)
 for field in ["name"] + L.DETAIL_FIELDS:
@@ -125,6 +126,7 @@ def start_new_case():
     st.session_state.show_result = False
     st.session_state.letter_ready = False
     st.session_state.plan_explained = None
+    st.session_state.confirm_rewrite = False
 
 
 # Cases are kept only in this visitor's browser tab, never in a shared file,
@@ -181,6 +183,8 @@ with tab_new:
 
     st.text_area("Bank SMS or notice", key="sms_input", height=130,
                  placeholder="Paste the SMS your bank sent you")
+    st.caption("Demo tip: use the example SMS, or remove your full account number first. "
+               "Wapas only needs the last 4 digits.")
     col1, col2 = st.columns(2)
     col1.button("Use example SMS", on_click=use_example)
     read_clicked = col2.button("Read my message", type="primary")
@@ -205,6 +209,11 @@ with tab_new:
         st.caption(f"Found using: {st.session_state.extract_method}. Correct anything that's wrong.")
         if st.session_state.extract_error:
             st.caption(f"AI problem: {st.session_state.extract_error}")
+
+        with st.expander("What do these words mean?"):
+            st.markdown("- **FIR** (First Information Report): the police's written record of a complaint. "
+                        "Your bank's message may show its number, or another reference number.\n"
+                        "- **Debit freeze**: the bank stops money from going out of your account.")
 
         c1, c2 = st.columns(2)
         c1.text_input("Your full name", key="f_name")
@@ -231,6 +240,7 @@ with tab_new:
                 st.session_state.show_result = True
                 st.session_state.letter_ready = False
                 st.session_state.plan_explained = None
+                st.session_state.confirm_rewrite = False
 
         if st.session_state.show_result and None not in (q1, q2, q3):
             details = {f: st.session_state["f_" + f] for f in ["name"] + L.DETAIL_FIELDS}
@@ -240,6 +250,8 @@ with tab_new:
                 # Honest route: no innocence letter for people who lent their account
                 st.error("Because you let someone else use your account, this is serious. "
                          "Please don't send a letter saying you're innocent. Get free legal help first.")
+                st.link_button("Call NALSA free legal aid: 15100", "tel:15100",
+                               type="primary", width="stretch", key="call_nalsa")
                 for _, r in L.rules_for(rules_df, "lent").iterrows():
                     st.markdown(f"- {r['rule']}")
                     st.caption(f"Source: {r['source']}. Last checked: {r['last_verified']}.")
@@ -271,6 +283,7 @@ with tab_new:
                         else:
                             letter, method, error = L.template_letter(details, rules_df), "fixed template (AI off)", None
                     st.session_state.letter_box = letter
+                    st.session_state.letter_original = letter  # to tell later if the user edited it
                     st.session_state.letter_method = method
                     st.session_state.letter_error = error
                     st.session_state.letter_ready = True
@@ -284,11 +297,25 @@ with tab_new:
                 b1.download_button("Download letter", data=st.session_state.letter_box,
                                    file_name=f"wapas_letter_{details['last4'] or 'case'}.txt")
                 if b2.button("Rewrite letter"):
-                    st.session_state.letter_ready = False
-                    st.rerun()
+                    if st.session_state.letter_box != st.session_state.letter_original:
+                        st.session_state.confirm_rewrite = True  # they edited it, so ask first
+                    else:
+                        st.session_state.letter_ready = False
+                        st.rerun()
                 if b3.button("Save this case", type="primary"):
                     case_id = save_my_case(details, st.session_state.letter_box)
                     st.success(f"Saved as case #{case_id}. Open My cases to track it.")
+
+                if st.session_state.confirm_rewrite:
+                    st.warning("You edited this letter. Rewriting replaces your edits with a new letter.")
+                    r1, r2 = st.columns(2)
+                    if r1.button("Replace my edits with a new letter"):
+                        st.session_state.confirm_rewrite = False
+                        st.session_state.letter_ready = False
+                        st.rerun()
+                    if r2.button("Keep my edits"):
+                        st.session_state.confirm_rewrite = False
+                        st.rerun()
 
                 subject = f"Request to limit the debit freeze on account ending {details['last4']}"
                 s1, s2 = st.columns(2)
@@ -296,6 +323,12 @@ with tab_new:
                 s2.link_button("Send by email", L.email_link(subject, st.session_state.letter_box))
                 st.caption("Share it with a family member or lawyer to check, or open your email app "
                            "with the letter ready to send to the bank.")
+
+                st.info("**What to do next**\n\n"
+                        "1. Fill in anything still in [square brackets] and check every detail.\n"
+                        "2. Send the letter to your bank branch manager. Keep a copy.\n"
+                        "3. Note the date you sent it, and set the case status to \"Sent to bank\" in My cases.\n"
+                        "4. If the bank has not replied in 15 days, send the follow-up letter from My cases.")
 
         st.button("Start a new case", on_click=start_new_case)
 

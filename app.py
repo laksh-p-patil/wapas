@@ -22,6 +22,32 @@ st.markdown(
     """
     <style>
       .stApp p, .stApp li, .stApp label { font-size: 1.05rem; }
+
+      /* Hide Streamlit's own Deploy button and menu */
+      [data-testid="stAppDeployButton"], [data-testid="stMainMenu"],
+      [data-testid="stToolbarActions"] { display: none; }
+
+      /* A darker orange, so white button text and the active tab pass contrast (5.2:1) */
+      [data-testid="stBaseButton-primary"], [data-testid="stBaseLinkButton-primary"] {
+        background-color: #B94A0A; border-color: #B94A0A; }
+      [data-testid="stBaseButton-primary"]:hover, [data-testid="stBaseLinkButton-primary"]:hover {
+        background-color: #9A3C07; border-color: #9A3C07; }
+      .stTabs [aria-selected="true"] { color: #B94A0A; }
+      .stTabs [data-baseweb="tab-highlight"] { background-color: #B94A0A; }
+
+      /* The opening: name, meaning, promise, three steps */
+      div.wapas-hero { margin: 0.5rem 0 1rem 0; }
+      div.wapas-hero h1.wapas-name { font-size: 3.25rem; line-height: 1.05; font-weight: 800;
+                                     letter-spacing: -0.02em; margin: 0; padding: 0; }
+      div.wapas-hero .wapas-meaning { color: #4A5468; margin: 0.35rem 0 0.9rem 0; }
+      div.wapas-hero .wapas-promise { font-size: 1.25rem; line-height: 1.4; max-width: 36rem;
+                                      margin: 0 0 1.25rem 0; text-wrap: balance; }
+      div.wapas-hero ol.wapas-steps { display: grid; gap: 1rem; list-style: none; margin: 0; padding: 0;
+                                      grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
+      div.wapas-hero ol.wapas-steps li { border-top: 3px solid #B94A0A; padding: 0.5rem 0 0 0; margin: 0; }
+      div.wapas-hero ol.wapas-steps b { display: block; font-size: 1.1rem; }
+      div.wapas-hero ol.wapas-steps span { color: #4A5468; font-size: 0.95rem; }
+
       .wapas-note { background:#FDE9DC; color:#7A2E07; padding:10px 14px; border-radius:8px;
                     font-size:0.95rem; margin: 0.25rem 0 0.75rem 0; }
       .st-key-call_nalsa a { min-height: 3.5rem; font-size: 1.3rem; font-weight: 700; }
@@ -82,22 +108,38 @@ with st.sidebar:
 
 ai_on = bool(api_key)
 
+# The AI status is for the owner only, and lives in the sidebar, not the main screen
+if admin:
+    with st.sidebar:
+        if ai_on:
+            st.caption(f"AI is on ({provider}, {model}).")
+        else:
+            st.caption("AI is off, so Wapas is using fixed templates. Add an API key to turn it on.")
+
 # ---------------------------------------------------------------------------
 # Header
 # ---------------------------------------------------------------------------
-st.title("Wapas")
-st.write("Help for people whose bank account was frozen because of someone else's scam.")
+st.markdown(
+    """
+    <div class="wapas-hero">
+      <h1 class="wapas-name">Wapas</h1>
+      <p class="wapas-meaning">वापस means &ldquo;back&rdquo; in Hindi.</p>
+      <p class="wapas-promise">If your bank account was frozen because of someone else&rsquo;s scam,
+        Wapas gives you a clear plan and a letter to ask your bank to release it.</p>
+      <ol class="wapas-steps">
+        <li><b>Paste your bank SMS</b><span>Wapas reads the details for you.</span></li>
+        <li><b>Answer three questions</b><span>Yes or no, nothing more.</span></li>
+        <li><b>Get your letter</b><span>Plus a plan, with sources.</span></li>
+      </ol>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 st.markdown(
     '<div class="wapas-note">Wapas never asks for money, OTPs, PINs or passwords. '
     "This is a demo, so don't enter real bank details. It is not legal advice.</div>",
     unsafe_allow_html=True,
 )
-if ai_on:
-    st.caption(f"AI is on ({provider}, {model}).")
-elif admin:
-    st.caption("AI is off, so Wapas is using fixed templates. Add an API key in the sidebar to turn it on.")
-else:
-    st.caption("Wapas is using its built-in letter templates right now.")
 
 rules_df = L.load_rules()
 

@@ -127,6 +127,3 @@ No API key? The app still runs using its fixed templates.
 
 ---
 
-## Team
-
-Built by *[add your team names here]*.

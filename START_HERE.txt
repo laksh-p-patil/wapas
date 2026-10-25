@@ -45,8 +45,12 @@ STEP 4. Put your key in the app
        API_KEY = "AIza...your key..."
 4. Save and close.
 
-(Shortcut: you can skip this step and paste the key into the "API key" box
-in the app's sidebar instead. You'd have to paste it each time you start.)
+The key always goes in secrets.toml. The app has no API key box in the sidebar.
+
+To change the AI settings (provider, model, "Test AI connection") or to edit
+the Rules tab, add this line to your own local secrets.toml:
+       ADMIN_MODE = true
+Leave it out on the public website, so visitors can't change anything.
 
 
 STEP 5. Start the app
@@ -65,11 +69,11 @@ choose "Open", then "Open" again.)
 
 STEP 6. Check that the AI works
 -------------------------------
-In the sidebar, click "Test AI connection".
+Add ADMIN_MODE = true to secrets.toml (see Step 4), restart the app, then
+click "Test AI connection" in the sidebar.
 - "AI is working" means you're done.
 - If the error mentions the MODEL: open AI Studio, find a current "Flash"
-  model name, and paste it into the "Model name" box in the sidebar
-  (or into MODEL in secrets.toml).
+  model name, and paste it into MODEL in secrets.toml.
 - If the error mentions the KEY: check that you copied the whole key.
 - If the AI fails, the app still works using fixed templates.
   You'll see "fixed template (AI off)" under the letter.
@@ -84,15 +88,16 @@ TRY IT (do this before the event)
 4. Click "Explain this plan in simple Kannada" (choose Kannada in the sidebar).
 5. Click "Save this case", then open the "My cases" tab.
 6. Click "Simulate day 15" to see the reminder and follow-up letter.
-7. Rules tab: change the text of a rule, click "Save rules". Go back to
-   the New case tab and click "Rewrite letter". The letter uses the new rule.
+7. Rules tab (needs ADMIN_MODE = true): change the text of a rule, click
+   "Save rules". Go back to the New case tab and click "Rewrite letter".
+   The letter uses the new rule. Without ADMIN_MODE the table is read-only.
 8. Try answering "Yes" to "Did you ever let someone else use your bank
    account?" It should NOT give a letter.
 9. Change the example SMS (different bank, amount or date) and click
    "Read my message" again. The AI should pick up the new details.
    This is the best way to show judges the AI is real.
 
-Before the demo, use "Reset demo data" in the My cases tab to clear test cases.
+Saved cases stay in your browser tab only. Refreshing the page clears them.
 
 
 COMMON PROBLEMS

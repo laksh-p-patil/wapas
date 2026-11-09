@@ -156,11 +156,27 @@ st.markdown(
         @keyframes wapas-fade { from { opacity: 0; } to { opacity: 1; } }
         @keyframes wapas-slide { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
         @keyframes wapas-pop { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+        @keyframes wapas-type { from { clip-path: inset(-0.4em 100% -0.4em -0.1em); }
+                                to { clip-path: inset(-0.4em -0.4em -0.4em -0.1em); } }
+        @keyframes wapas-cursor-move { from { left: 0; } to { left: 100%; } }
+        @keyframes wapas-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes wapas-cursor-hide { to { visibility: hidden; } }
 
         /* The three step cards rise in one after another, 0.4s each */
         div.wapas-hero ol.wapas-steps li { animation: wapas-rise 0.4s ease-out both; }
         div.wapas-hero ol.wapas-steps li:nth-child(2) { animation-delay: 0.4s; }
         div.wapas-hero ol.wapas-steps li:nth-child(3) { animation-delay: 0.8s; }
+
+        /* The line under "Wapas" is typed out once in 1.2s (27 characters, so 27 steps). The reveal is a
+           clip that moves left to right, so the Hindi letters are never cut and a narrow screen still wraps.
+           A thin cursor rides the front edge, blinks, and is hidden when the typing ends. */
+        div.wapas-hero .wapas-meaning { position: relative; width: fit-content;
+                                        animation: wapas-type 1.2s steps(27, end) both; }
+        div.wapas-hero .wapas-meaning::after { content: ""; position: absolute; top: 0.2em; left: 0;
+                                               width: 2px; height: 1.1em; margin-left: -2px; background: currentColor;
+                                               animation: wapas-cursor-move 1.2s steps(27, end) both,
+                                                          wapas-blink 0.6s steps(1) infinite,
+                                                          wapas-cursor-hide 0s linear 1.2s forwards; }
 
         /* Buttons lift 2px with a soft shadow on hover */
         [data-testid="stButton"] button, [data-testid="stDownloadButton"] button, [data-testid="stLinkButton"] a {

@@ -379,6 +379,15 @@ def start_new_case():
     st.session_state.confirm_rewrite = False
 
 
+BRING_ITEMS = [
+    "A written application asking the bank to unfreeze your account or remove the hold",
+    "Your KYC documents",
+    "A passport size photo",
+    "A copy of the bank message or notice you received",
+    "A pen or phone to note down the date and the name of the person who takes your application",
+]
+
+
 def toast_download():
     st.toast("Download started", icon=":material/check_circle:")
 
@@ -541,6 +550,13 @@ with tab_new:
                     for number, (_, r) in enumerate(plan_rules.iterrows(), start=1):
                         st.markdown(f"**{number}.** {r['rule']}")
                         st.caption(f"Source: {r['source']}. Last checked: {r['last_verified']}.")
+
+                with st.expander("Bring these to the bank"):
+                    # The ticks live only in st.session_state (through the keys), so nothing is saved
+                    for number, item in enumerate(BRING_ITEMS, start=1):
+                        st.checkbox(item, key=f"bring_{number}")
+                st.caption("Ask the bank to raise your grievance on the Grievance Redressal Module. "
+                           "The SOP expects the bank to register it within 7 calendar days of getting your application.")
 
                 st.subheader("5. Your letter")
                 inputs = (tuple(details.values()), q1 == "Yes", q2 == "Yes")  # what the letter is built from

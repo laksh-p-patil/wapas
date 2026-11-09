@@ -144,7 +144,6 @@ with st.sidebar:
         default_model = secret("MODEL") if provider == saved_provider and secret("MODEL") else L.DEFAULT_MODELS[provider]
         model = st.text_input("Model name", value=default_model,
                               help="If you get a 'model not found' error, copy a current model name from your provider's website.")
-    language = st.radio("Explain my plan in", ["English", "Kannada"], horizontal=True)
 
     if admin:
         if st.button("Test AI connection"):
@@ -196,7 +195,7 @@ rules_df = L.load_rules()
 # Remember things between clicks (Streamlit re-runs this file on every click)
 defaults = {"details_ready": False, "show_result": False, "letter_ready": False,
             "extract_method": "", "extract_error": None, "letter_method": "",
-            "rules_version": 0, "flash": None, "followups": {}, "plan_explained": None,
+            "rules_version": 0, "flash": None, "followups": {},
             "my_cases": [], "case_count": 0, "confirm_rewrite": False, "letter_original": ""}
 for key, value in defaults.items():
     st.session_state.setdefault(key, value)
@@ -217,7 +216,6 @@ def start_new_case():
     st.session_state.details_ready = False
     st.session_state.show_result = False
     st.session_state.letter_ready = False
-    st.session_state.plan_explained = None
     st.session_state.confirm_rewrite = False
 
 
@@ -315,7 +313,6 @@ with tab_new:
             else:
                 st.session_state.show_result = True
                 st.session_state.letter_ready = False
-                st.session_state.plan_explained = None
                 st.session_state.confirm_rewrite = False
 
         if st.session_state.show_result and None not in (q1, q2, q3):
@@ -341,15 +338,6 @@ with tab_new:
                 for number, (_, r) in enumerate(plan_rules.iterrows(), start=1):
                     st.markdown(f"**{number}.** {r['rule']}")
                     st.caption(f"Source: {r['source']}. Last checked: {r['last_verified']}.")
-
-                if st.button(f"Explain this plan in simple {language}"):
-                    with st.spinner("Explaining..."):
-                        text, error = L.explain_plan(plan_rules, language, provider, api_key, model)
-                    st.session_state.plan_explained = text or (
-                        f"The AI couldn't explain this right now. {error}" if admin else
-                        "The AI couldn't explain this right now. The steps above are the full plan.")
-                if st.session_state.plan_explained:
-                    st.info(st.session_state.plan_explained)
 
                 st.subheader("5. Your letter")
                 if not st.session_state.letter_ready:

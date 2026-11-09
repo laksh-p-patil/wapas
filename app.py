@@ -146,6 +146,37 @@ st.markdown(
 )
 
 
+# Small CSS-only animations. They are switched off for visitors who ask for reduced motion.
+# Only things that appear once (the step cards and the two boxes) fade in, so nothing flickers on a click.
+st.markdown(
+    """
+    <style>
+      @media (prefers-reduced-motion: no-preference) {
+        @keyframes wapas-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        @keyframes wapas-fade { from { opacity: 0; } to { opacity: 1; } }
+
+        /* The three step cards rise in one after another, 0.4s each */
+        div.wapas-hero ol.wapas-steps li { animation: wapas-rise 0.4s ease-out both; }
+        div.wapas-hero ol.wapas-steps li:nth-child(2) { animation-delay: 0.4s; }
+        div.wapas-hero ol.wapas-steps li:nth-child(3) { animation-delay: 0.8s; }
+
+        /* Buttons lift 2px with a soft shadow on hover */
+        [data-testid="stButton"] button, [data-testid="stDownloadButton"] button, [data-testid="stLinkButton"] a {
+          transition: transform 0.15s ease, box-shadow 0.15s ease,
+                      background-color 0.15s ease, border-color 0.15s ease; }
+        [data-testid="stButton"] button:not(:disabled):hover,
+        [data-testid="stDownloadButton"] button:not(:disabled):hover,
+        [data-testid="stLinkButton"] a:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18); }
+
+        /* The "Do this now" box and the letter box fade in when they appear */
+        .st-key-do_now, .st-key-letter_box { animation: wapas-fade 0.3s ease-out; }
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
 def secret(name, default=""):
     """Read a value from .streamlit/secrets.toml. Returns default if it isn't there."""
     try:
@@ -329,10 +360,11 @@ with tab_new:
 
                 st.subheader("4. Your plan")
                 plan_rules = L.rules_for(rules_df, "frozen")
-                st.info("**Do this now**\n\n"
-                        "1. Ask your bank for the freeze details: police station, case or FIR number, date, legal sections.\n"
-                        "2. Ask that only the disputed amount is held, not the whole account.\n"
-                        "3. Use the official grievance redressal mechanism first.")
+                with st.container(key="do_now"):  # the key lets the CSS fade this box in
+                    st.info("**Do this now**\n\n"
+                            "1. Ask your bank for the freeze details: police station, case or FIR number, date, legal sections.\n"
+                            "2. Ask that only the disputed amount is held, not the whole account.\n"
+                            "3. Use the official grievance redressal mechanism first.")
                 plan_open = st.session_state.get("plan_details_open", False)
                 if st.button("Hide full details" if plan_open else "Show full details"):
                     st.session_state.plan_details_open = not plan_open

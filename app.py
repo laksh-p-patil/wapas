@@ -140,6 +140,11 @@ st.markdown(
       .st-key-reset_letter button, .st-key-reset_letter button * { color: #5C3B00; }
       .st-key-reset_letter button { background-color: #FFF1CC; border-color: #D9A93A; }
       .st-key-reset_letter button:hover { background-color: #FCE5A6; border-color: #B8861A; }
+
+      /* The amber note in the reminder dialog: the same amber as Reset letter, with dark text in both modes */
+      .wapas-amber { background-color: #FFF1CC; border: 1px solid #D9A93A; border-radius: 8px; padding: 10px 14px;
+                     font-size: 1rem; line-height: 1.5; margin: 0 0 0.75rem 0; }
+      .wapas-amber, .wapas-amber * { color: #5C3B00; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -304,15 +309,10 @@ def start_new_case():
     st.session_state.show_result = False
     st.session_state.letter_ready = False
     st.session_state.confirm_rewrite = False
-    st.session_state.reminder_clicked = False
 
 
 def toast_download():
     st.toast("Download started", icon=":material/check_circle:")
-
-
-def note_reminder_click():
-    st.session_state.reminder_clicked = True
 
 
 def reminder_ics():
@@ -329,6 +329,23 @@ def reminder_ics():
     # Calendar files use CRLF line ends and fold long lines after 75 characters
     folded = ["\r\n ".join(line[i:i + 74] for i in range(0, len(line), 74)) for line in lines]
     return "\r\n".join(folded) + "\r\n"
+
+
+@st.dialog("Add a reminder to your calendar")
+def reminder_dialog():
+    st.markdown(
+        '<div class="wapas-amber">This adds one event to your calendar for day 15. On that day, check whether '
+        "your bank replied. If it has not, open Wapas and use the follow-up letter. The file has none of your "
+        "details. Day 15 is a check-in date set by Wapas, not a legal deadline. Cases like this can take time, "
+        "so keep copies of everything and write down dates. Wapas does not keep your case, so download your "
+        "letter too.</div>",
+        unsafe_allow_html=True,
+    )
+    # "ignore" means no rerun and no callback, so the dialog stays open
+    st.download_button("Download reminder file", icon=":material/event:", key="download_reminder",
+                       data=reminder_ics(), file_name="wapas-day-15-reminder.ics",
+                       mime="text/calendar", on_click="ignore")
+    st.caption("Your file downloads when you click.")
 
 
 # Cases are kept only in this visitor's browser tab, never in a shared file,
@@ -521,17 +538,10 @@ with tab_new:
                         st.session_state.confirm_rewrite = False
                         st.rerun()
 
-                st.download_button("Add day-15 reminder", icon=":material/event:", key="add_reminder",
-                                   data=reminder_ics(), file_name="wapas-day-15-reminder.ics",
-                                   mime="text/calendar", on_click=note_reminder_click)
+                if st.button("Add day-15 reminder", icon=":material/event:", key="open_reminder"):
+                    reminder_dialog()
                 st.caption("Adds a calendar event on day 15 to check if your bank replied. "
                            "The file has none of your details.")
-                if st.session_state.get("reminder_clicked"):
-                    st.info("Your reminder file is on its way. Open it to add the event to your calendar. "
-                            "On that day, check whether your bank replied. If it has not, open Wapas and use "
-                            "the follow-up letter. Day 15 is a check-in date set by Wapas, not a legal deadline. "
-                            "Cases like this can take time. Keep copies of everything and write down every date. "
-                            "Wapas does not keep your case, so download your letter too.")
 
                 st.info("**What to do next**\n\n"
                         "1. Fill in anything still in [square brackets] and check every detail.\n"

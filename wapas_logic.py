@@ -330,7 +330,7 @@ Dear Sir/Madam,
 
 On {case.get('created')}, I wrote to request the details of the freeze instruction on my account and that the hold be limited to the disputed amount of {_blank(case.get('amount'), 'amount')}. I have not yet received a reply.
 
-I request an update within 7 days. If I do not hear back, I will use the official grievance redressal mechanism and seek free legal aid.
+I request an update within 7 days. If I do not hear back, I will use the official grievance redressal mechanism and seek legal advice, including free legal aid if I qualify.
 
 Yours faithfully,
 {_blank(case.get('name'), 'your full name')}

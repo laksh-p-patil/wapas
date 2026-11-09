@@ -314,8 +314,9 @@ with tab_new:
             if q3 == "Yes":
                 # Honest route: no innocence letter for people who lent their account
                 st.error("Because you let someone else use your account, this is serious. "
-                         "Please don't send a letter saying you're innocent. Get free legal help first.")
-                st.link_button("Call NALSA free legal aid: 15100", "tel:15100",
+                         "Please don't send a letter saying you're innocent. Get legal advice first. "
+                         "You may qualify for free legal aid.")
+                st.link_button("Ask NALSA (15100) if you qualify for free legal aid", "tel:15100",
                                type="primary", width="stretch", key="call_nalsa")
                 for _, r in L.rules_for(rules_df, "lent").iterrows():
                     st.markdown(f"- {r['rule']}")
@@ -323,7 +324,8 @@ with tab_new:
             else:
                 if q1 == "No":
                     st.info("Wapas works best when the money was received for a genuine sale or service. "
-                            "If that's not your situation, talk to free legal aid before sending anything.")
+                            "If that's not your situation, get legal advice before sending anything. "
+                            "Ask NALSA (15100) if you qualify for free legal aid.")
 
                 st.subheader("4. Your plan")
                 plan_rules = L.rules_for(rules_df, "frozen")

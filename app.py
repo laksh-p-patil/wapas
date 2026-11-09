@@ -17,7 +17,10 @@ import streamlit as st
 import wapas_logic as L
 
 st.set_page_config(page_title="Wapas", page_icon="🔓", layout="centered",
-                   initial_sidebar_state="collapsed")
+                   initial_sidebar_state="collapsed",
+                   menu_items={"Get help": None, "Report a bug": None,
+                               "About": "Wapas helps people with a frozen bank account write a grievance letter. "
+                                        "It is not legal advice. Cases are kept only while your browser tab is open."})
 
 # Styling: type sizes, tap sizes, phone layout, and the opening
 st.markdown(

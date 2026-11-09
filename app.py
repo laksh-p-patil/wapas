@@ -333,7 +333,7 @@ with tab_new:
                 # Group 2: change the letter or keep the case
                 st.caption("Change or keep your case")
                 k1, k2, _ = st.columns(3)  # the two buttons line up under the first two above
-                if k1.button("Rewrite letter", icon=":material/edit:"):
+                if k1.button("Reset letter", icon=":material/edit:"):
                     if st.session_state.letter_box != st.session_state.letter_original:
                         st.session_state.confirm_rewrite = True  # they edited it, so ask first
                     else:
@@ -346,9 +346,9 @@ with tab_new:
                            "Download your letter to keep it.")
 
                 if st.session_state.confirm_rewrite:
-                    st.warning("You edited this letter. Rewriting replaces your edits with a new letter.")
+                    st.warning("You edited this letter. Resetting replaces your edits with a new letter.")
                     r1, r2 = st.columns(2)
-                    if r1.button("Replace my edits with a new letter"):
+                    if r1.button("Reset and replace my edits"):
                         st.session_state.confirm_rewrite = False
                         st.session_state.letter_ready = False
                         st.rerun()

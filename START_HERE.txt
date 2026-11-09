@@ -4,12 +4,13 @@ WAPAS: HOW TO SET UP AND RUN THE APP
 What's in this folder
 ---------------------
 app.py              The screens (what people see). Built with Streamlit.
-wapas_logic.py      The backend: talks to the AI, reads the SMS, writes letters, saves cases.
+wapas_logic.py      The backend: reads the SMS and writes the letters.
 rules.csv           Our real data: rules from court orders and government SOPs, with sources.
-.streamlit/         Settings. secrets.toml holds your API key (keep it private).
+.streamlit/         Settings.
 START_WAPAS.bat     Double-click this to start the app on Windows.
 start_mac.command   Double-click this to start the app on a Mac.
-wapas_cases.db      The database of saved cases. It appears by itself the first time you save a case.
+
+The app works with no API key. Nothing typed or uploaded is sent to an AI service.
 
 
 STEP 1. Install Python (one time, about 5 minutes)
@@ -27,33 +28,7 @@ STEP 2. Unzip the folder
 Right-click the zip file, choose "Extract All", and put the "wapas" folder on your Desktop.
 
 
-STEP 3. Get a free AI key (about 3 minutes)
--------------------------------------------
-1. Go to https://aistudio.google.com and sign in with a Google account.
-2. Click "Get API key", then "Create API key".
-3. Copy the key.
-
-Keep the key secret. Don't send it in group chats or upload it anywhere.
-Anyone who has it can use your account.
-
-
-STEP 4. Put your key in the app
--------------------------------
-1. Open the "wapas" folder, then the ".streamlit" folder.
-2. Right-click "secrets.toml", choose "Open with", then "Notepad".
-3. Paste your key between the quotes on the API_KEY line, like this:
-       API_KEY = "AIza...your key..."
-4. Save and close.
-
-The key always goes in secrets.toml. The app has no API key box in the sidebar.
-
-To change the AI settings (provider, model, "Test AI connection") or to edit
-the Rules tab, add this line to your own local secrets.toml:
-       ADMIN_MODE = true
-Leave it out on the public website, so visitors can't change anything.
-
-
-STEP 5. Start the app
+STEP 3. Start the app
 ---------------------
 1. Double-click START_WAPAS.bat.
 2. The first time, it installs what the app needs. This needs internet and
@@ -64,40 +39,17 @@ STEP 5. Start the app
 5. Keep the black window open. Closing it stops the app.
 
 (Mac: double-click start_mac.command. If the Mac blocks it, right-click it,
-choose "Open", then "Open" again.)
+choose "Open", then "Open" again. Or open a terminal in the folder and type:
+       python3 -m pip install -r requirements.txt
+       python3 -m streamlit run app.py)
 
 
-STEP 6. Check that the AI works
--------------------------------
-Add ADMIN_MODE = true to secrets.toml (see Step 4), restart the app, then
-click "Test AI connection" in the sidebar.
-- "AI is working" means you're done.
-- If the error mentions the MODEL: open AI Studio, find a current "Flash"
-  model name, and paste it into MODEL in secrets.toml.
-- If the error mentions the KEY: check that you copied the whole key.
-- If the AI fails, the app still works using fixed templates.
-  You'll see "fixed template (AI off)" under the letter.
-
-
-TRY IT (do this before the event)
----------------------------------
-1. New case tab: click "Use example SMS", then "Read my message".
-   The details (bank, amount, date, police station) fill in automatically.
-2. Type a name. Answer the three questions: Yes, No, No.
-3. Click "Show my plan and letter". Read the plan and the letter.
-4. Click "Explain this plan in simple Kannada" (choose Kannada in the sidebar).
-5. Click "Save this case", then open the "My cases" tab.
-6. Click "Simulate day 15" to see the reminder and follow-up letter.
-7. Rules tab (needs ADMIN_MODE = true): change the text of a rule, click
-   "Save rules". Go back to the New case tab and click "Rewrite letter".
-   The letter uses the new rule. Without ADMIN_MODE the table is read-only.
-8. Try answering "Yes" to "Did you ever let someone else use your bank
-   account?" It should NOT give a letter.
-9. Change the example SMS (different bank, amount or date) and click
-   "Read my message" again. The AI should pick up the new details.
-   This is the best way to show judges the AI is real.
-
-Saved cases stay in your browser tab only. Refreshing the page clears them.
+OPTIONAL: edit the Rules tab (owner mode)
+-----------------------------------------
+To edit the Rules tab on your own computer, add this line to a local
+.streamlit/secrets.toml file:
+       ADMIN_MODE = true
+Never put it in the repo or on a hosted site, so visitors can't change anything.
 
 
 COMMON PROBLEMS
@@ -114,32 +66,3 @@ The window closes straight away:
 
 The browser shows an error in red:
    Copy the error text and paste it to Claude with "I got this error".
-
-The AI stops working during the demo:
-   Keep going. The app switches to fixed templates automatically.
-   Say: "Our app falls back to verified templates if the AI is unavailable."
-
-
-USING OPENAI OR CLAUDE INSTEAD OF GEMINI
-----------------------------------------
-Change PROVIDER in secrets.toml to "openai" or "anthropic", and paste that
-company's API key. These need paid credits. Gemini has a free tier.
-
-
-ON THE DAY
-----------
-- The AI needs internet. Bring a phone hotspot.
-- Start the app BEFORE your turn and keep the black window open.
-- Record a backup video of the demo (Windows + G on Windows, Cmd + Shift + 5 on Mac).
-- Bring this folder on a pen drive too.
-
-
-HOW TO EXPLAIN IT TO JUDGES (in your own words)
------------------------------------------------
-"The screens are built in Python with Streamlit. The backend sends the bank
-SMS to Google's Gemini AI through its API, which pulls out the details. Then
-it writes a personalised letter using only the rules in our rules table,
-which we collected from real court orders and government SOPs. Cases are
-saved in a SQLite database. The API key stays on the backend, and if the AI
-fails, the app falls back to fixed templates. We never store the full
-account number or the SMS."

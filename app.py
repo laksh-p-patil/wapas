@@ -341,11 +341,16 @@ def reminder_dialog():
         "letter too.</div>",
         unsafe_allow_html=True,
     )
+    day15 = date.today() + timedelta(days=15)
+    st.write(f"Day 15 is **{day15:%B} {day15.day}, {day15.year}**.")
     # "ignore" means no rerun and no callback, so the dialog stays open
     st.download_button("Download reminder file", icon=":material/event:", key="download_reminder",
                        data=reminder_ics(), file_name="wapas-day-15-reminder.ics",
                        mime="text/calendar", on_click="ignore")
     st.caption("Your file downloads when you click.")
+    st.caption("If the file does not open on your phone or computer, add this date to your calendar or phone "
+               "reminders yourself. If you opened Wapas inside WhatsApp or another app, open it in Chrome or "
+               "Safari first.")
 
 
 # Cases are kept only in this visitor's browser tab, never in a shared file,

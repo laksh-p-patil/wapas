@@ -161,11 +161,25 @@ st.markdown(
         @keyframes wapas-cursor-move { from { left: 0; } to { left: 100%; } }
         @keyframes wapas-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes wapas-cursor-hide { to { visibility: hidden; } }
+        @keyframes wapas-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+        @keyframes wapas-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(61, 178, 124, 0); }
+                                50% { box-shadow: 0 0 14px 4px rgba(61, 178, 124, 0.55); } }
+        @keyframes wapas-ring { 0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+                                50% { box-shadow: 0 0 12px 3px rgba(220, 53, 69, 0.45); } }
 
         /* The three step cards rise in one after another, 0.4s each */
         div.wapas-hero ol.wapas-steps li { animation: wapas-rise 0.4s ease-out both; }
         div.wapas-hero ol.wapas-steps li:nth-child(2) { animation-delay: 0.4s; }
         div.wapas-hero ol.wapas-steps li:nth-child(3) { animation-delay: 0.8s; }
+
+        /* The line above each step card draws in left to right over 0.6s, staggered like the cards.
+           The real border is turned off (its colour is kept) and a line of the same colour is drawn in its place. */
+        div.wapas-hero ol.wapas-steps li { position: relative; border-top-style: none; padding-top: calc(0.5rem + 3px); }
+        div.wapas-hero ol.wapas-steps li::before { content: ""; position: absolute; top: 0; left: 0; right: 0;
+                                                   border-top: 3px solid; border-top-color: inherit;
+                                                   transform-origin: left; animation: wapas-draw 0.6s ease-out both; }
+        div.wapas-hero ol.wapas-steps li:nth-child(2)::before { animation-delay: 0.4s; }
+        div.wapas-hero ol.wapas-steps li:nth-child(3)::before { animation-delay: 0.8s; }
 
         /* The line under "Wapas" is typed out once in 1.2s (27 characters, so 27 steps). The reveal is a
            clip that moves left to right, so the Hindi letters are never cut and a narrow screen still wraps.
@@ -201,6 +215,12 @@ st.markdown(
         /* Success, warning and info boxes slide in once when they appear (the "Do this now" box already fades) */
         [data-testid="stAlert"] { animation: wapas-slide 0.3s ease-out; }
         .st-key-do_now [data-testid="stAlert"] { animation: none; }
+
+        /* "Read my message" glows softly 3 times, starting 1s after it appears, then stops */
+        .st-key-read_message button { animation: wapas-glow 2.4s ease-in-out 1s 3; }
+
+        /* The red "lent your account" box gets one soft border glow, with no movement (this replaces its slide) */
+        [data-testid="stAlert"]:has([data-testid="stAlertContentError"]) { animation: wapas-ring 2.5s ease-in-out 1; }
 
         /* Yes/No answers: the fill eases to the chosen option, which pops once; the others lift on hover */
         [data-testid="stRadioOption"] { transition: transform 0.15s ease; }
@@ -326,7 +346,7 @@ with tab_new:
                "Wapas only needs the last 4 digits.")
     col1, col2 = st.columns(2)
     col1.button("Use example SMS", on_click=use_example)
-    read_clicked = col2.button("Read my message", type="primary")
+    read_clicked = col2.button("Read my message", type="primary", key="read_message")
 
     if read_clicked:
         sms = st.session_state.get("sms_input", "").strip()

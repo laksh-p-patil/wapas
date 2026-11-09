@@ -22,15 +22,13 @@ The government has built an official grievance system, but the first step, writi
 
 ## Features
 
-- **Reads the bank SMS:** paste the message and the AI extracts the bank, account (last 4 digits only), amount, date, police station and reference number.
-- **Reads screenshots:** upload a screenshot of the SMS instead of typing it.
-- **Three simple questions:** works out the person's situation. Anyone who lent their account to someone else is sent to free legal aid instead of being given an "I'm innocent" letter.
-- **Action plan:** clear next steps, each with its source and a "last checked" date.
-- **Personalised letter:** a formal grievance letter to the bank, grounded only in the verified rules. Download it, share it on WhatsApp, or open it in an email app.
-- **Case tracker and dashboard:** saves cases, shows follow-up reminders (with a "Simulate day 15" demo) and tracks cases, money in dispute and cases resolved.
-- **Editable rules table:** when a law or court order changes, update one row. No code changes needed.
-- **Explanations in English or Kannada.**
-- **Works without AI:** if the AI is unavailable, the app falls back to pattern matching and fixed letter templates, so users are never stuck.
+- **Reads the bank SMS:** paste the message and the app finds the bank, branch, account (last 4 digits only), amount, date, police station and reference number using pattern matching. It can miss details in unusual messages, so the person checks and corrects each field before going on.
+- **Three simple questions:** works out the person's situation. Anyone who lent their account to someone else is not given an "I'm innocent" letter. They are told to get legal advice and to ask NALSA (15100) whether they qualify for free legal aid.
+- **Action plan:** a short "Do this now" list, with a button to show the full plan. Each step has its source and a "last checked" date.
+- **Letter:** a formal grievance letter to the bank, written from a fixed template using the details the person entered and the verified rules. If the person says they know the payer, the letter leaves out the sentence saying they did not know the payer. Download it, share it on WhatsApp, or open it in an email app.
+- **Case tracker and dashboard:** keeps saved cases while the browser tab is open, shows follow-up reminders (with a "Simulate day 15" demo that writes the follow-up letter from a fixed template) and shows cases tracked, money in dispute and cases resolved.
+- **Editable rules table:** in owner mode, when a law or court order changes, update one row. No code changes needed.
+- **No AI and no API key:** the app does not call any AI service, and it needs no API key. Nothing the user types or uploads is sent to one.
 
 ---
 
@@ -38,19 +36,17 @@ The government has built an official grievance system, but the first step, writi
 
 ```
 User (browser)
-   │  pastes SMS / uploads screenshot, answers questions
+   │  pastes the SMS, answers three questions
    ▼
 app.py  ── frontend (Streamlit screens)
    │
    ▼
 wapas_logic.py  ── backend
    ├── rules.csv        verified rules (facts come only from here)
-   ├── Gemini API       reads the SMS, writes letters (words only)
-   ├── templates        backup when the AI is unavailable
-   └── wapas_cases.db   saved cases (SQLite)
+   └── templates        fixed letter and follow-up text, filled in from the details
 ```
 
-**Design principle:** facts come from the rules table; words come from the AI. The AI is instructed never to invent laws, court cases or phone numbers.
+**Design principle:** facts come from the rules table, and the letters come from fixed templates. The pasted SMS is read with pattern matching in Python. Saved cases are kept in the browser session, not in a database file.
 
 ---
 
@@ -59,9 +55,7 @@ wapas_logic.py  ── backend
 | Part | Technology |
 |---|---|
 | Frontend | Python, Streamlit |
-| Backend | Python |
-| AI | Google Gemini API (OpenAI and Anthropic also supported) |
-| Database | SQLite |
+| Backend | Python (pattern matching and fixed templates) |
 | Data | CSV rules table with sources |
 
 ---
@@ -88,21 +82,13 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-**4. Add your API key.** Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey), then create a file at `.streamlit/secrets.toml` containing:
-```toml
-PROVIDER = "gemini"
-API_KEY = "paste-your-key-here"
-MODEL = "gemini-3.5-flash-lite"
-```
-This file is listed in `.gitignore`, so your key is never uploaded. Model names change over time; if you get a "model not found" error, use a current model name from Google AI Studio.
-
-**5. Start the app.**
+**4. Start the app.**
 ```bash
 python3 -m streamlit run app.py
 ```
 It opens in your browser at `http://localhost:8501`. Click **Use example SMS** to try it.
 
-No API key? The app still runs using its fixed templates.
+No API key or account is needed.
 
 ---
 
@@ -110,7 +96,7 @@ No API key? The app still runs using its fixed templates.
 
 - **Real:** the rules come from published court orders and government procedures, each with a source.
 - **Sample:** the example SMS and the demo person ("Ravi") are made up. No real victims' data was used.
-- **Privacy:** only the last 4 digits of an account number are stored, the SMS itself is not saved, and personal details are masked.
+- **Privacy:** cases are kept only while the browser tab is open. If you refresh or close the tab, they are gone, so download the letter to keep it. A saved case keeps only the last 4 digits of the account number and does not include the SMS text. Nothing the user types or uploads is sent to an AI service. If the app is hosted online, what you paste is processed on the host's server.
 - **Safety:** Wapas never asks for money, OTPs, PINs or passwords, and says so on every screen.
 
 > **This is a student prototype, not legal advice.** Rules and procedures change often; always check the latest official guidance or contact free legal aid.

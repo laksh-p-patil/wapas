@@ -20,7 +20,9 @@ st.set_page_config(page_title="Wapas", page_icon="🔓", layout="centered",
                    initial_sidebar_state="collapsed",
                    menu_items={"Get help": None, "Report a bug": None,
                                "About": "Wapas helps people with a frozen bank account write a grievance letter. "
-                                        "It is not legal advice. Cases are kept only while your browser tab is open."})
+                                        "It is not legal advice. Cases are kept only while your browser tab is open. "
+                                        "Wapas runs on Streamlit's servers, so what you type is processed there, "
+                                        "but Wapas does not save it."})
 
 # Styling: type sizes, tap sizes, phone layout, and the opening
 st.markdown(
@@ -340,8 +342,8 @@ def reminder_dialog():
         '<div class="wapas-amber">This adds one event to your calendar for day 15. On that day, check whether '
         "your bank replied. If it has not, open Wapas and use the follow-up letter. The file has none of your "
         "details. Day 15 is a check-in date set by Wapas, not a legal deadline. Cases like this can take time, "
-        "so keep copies of everything and write down dates. Wapas does not keep your case, so download your "
-        "letter too.</div>",
+        "so keep copies of everything and write down dates. Wapas does not save your case after you close this "
+        "tab, so download your letter too.</div>",
         unsafe_allow_html=True,
     )
     day15 = date.today() + timedelta(days=15)
@@ -466,7 +468,7 @@ with tab_new:
                     st.info("**Do this now**\n\n"
                             "1. Ask your bank for the freeze details: police station, case or FIR number, date, legal sections.\n"
                             "2. Ask that only the disputed amount is held, not the whole account.\n"
-                            "3. Use the official grievance redressal mechanism first.")
+                            "3. Use the official grievance redressal mechanism.")
                 plan_open = st.session_state.get("plan_details_open", False)
                 if st.button("Hide full details" if plan_open else "Show full details"):
                     st.session_state.plan_details_open = not plan_open
@@ -566,7 +568,7 @@ with tab_new:
 # ---------------------------------------------------------------------------
 with tab_cases:
     st.subheader("Case tracker")
-    st.caption("Your cases are saved in this browser tab only. Refreshing or closing the page "
+    st.caption("Your cases last only while this tab is open. Refreshing or closing the page "
                "clears them, so download your letter to keep it.")
     cases = pd.DataFrame(st.session_state.my_cases)
     if cases.empty:

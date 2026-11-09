@@ -316,15 +316,15 @@ with tab_new:
                 st.text_area("You can edit the letter here", key="letter_box", height=460)
 
                 b1, b2, b3 = st.columns(3)
-                b1.download_button("Download letter", data=st.session_state.letter_box,
+                b1.download_button("Download letter", icon=":material/download:", data=st.session_state.letter_box,
                                    file_name=f"wapas_letter_{details['last4'] or 'case'}.txt")
-                if b2.button("Rewrite letter"):
+                if b2.button("Rewrite letter", icon=":material/edit:"):
                     if st.session_state.letter_box != st.session_state.letter_original:
                         st.session_state.confirm_rewrite = True  # they edited it, so ask first
                     else:
                         st.session_state.letter_ready = False
                         st.rerun()
-                if b3.button("Save this case", type="primary"):
+                if b3.button("Save this case", icon=":material/save:", type="primary"):
                     case_id = save_my_case(details, st.session_state.letter_box)
                     st.success(f"Saved as case #{case_id}. Open My cases to track it.")
                 st.caption("Your case is kept only while this tab is open. Refresh or close it and it's gone. "
@@ -343,8 +343,10 @@ with tab_new:
 
                 subject = f"Request to limit the debit freeze on account ending {details['last4']}"
                 s1, s2 = st.columns(2)
-                s1.link_button("Share on WhatsApp", L.whatsapp_link(st.session_state.letter_box))
-                s2.link_button("Send by email", L.email_link(subject, st.session_state.letter_box))
+                s1.link_button("Share on WhatsApp", L.whatsapp_link(st.session_state.letter_box),
+                               icon=":material/chat:")
+                s2.link_button("Send by email", L.email_link(subject, st.session_state.letter_box),
+                               icon=":material/mail:")
                 st.caption("Share it with a family member or lawyer to check, or open your email app "
                            "with the letter ready to send to the bank.")
 

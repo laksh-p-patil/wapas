@@ -255,30 +255,6 @@ tab_new, tab_cases, tab_rules = st.tabs(["New case", "My cases", "Rules"])
 # ---------------------------------------------------------------------------
 with tab_new:
     st.subheader("1. Paste the message from your bank")
-    with st.expander("Have a screenshot of the SMS? Upload it instead"):
-        photo = st.file_uploader("Screenshot of the bank SMS", type=["png", "jpg", "jpeg", "webp"])
-        if st.button("Read my screenshot", disabled=photo is None):
-            if not ai_on:
-                st.warning("Reading screenshots needs the AI. Add an API key, or paste the SMS text below."
-                           if admin else
-                           "Reading screenshots isn't available right now. Please paste the SMS text below.")
-            else:
-                with st.spinner("Reading your screenshot..."):
-                    text, found, error = L.extract_from_screenshot(
-                        photo.getvalue(), photo.type or "image/png", provider, api_key, model)
-                if text is None:
-                    st.warning(f"Couldn't read the screenshot. {error}")
-                else:
-                    st.session_state.sms_input = text
-                    for field in L.DETAIL_FIELDS:
-                        st.session_state["f_" + field] = found[field]
-                    st.session_state.extract_method = "AI (from screenshot)"
-                    st.session_state.extract_error = None
-                    st.session_state.details_ready = True
-                    st.session_state.show_result = False
-                    st.session_state.letter_ready = False
-                    st.success("Screenshot read. Check the details below.")
-
     st.text_area("Bank SMS or notice", key="sms_input", height=130,
                  placeholder="Paste the SMS your bank sent you")
     st.caption("Demo tip: use the example SMS, or remove your full account number first. "

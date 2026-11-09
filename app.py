@@ -62,17 +62,11 @@ st.markdown(
       [data-testid="stBaseButton-primary"]:hover, [data-testid="stBaseLinkButton-primary"]:hover {
         background-color: #14543A; border-color: #14543A; }
       .stTabs [aria-selected="true"], .stTabs [aria-selected="true"] p { font-weight: 700; }
-      /* In dark mode the deep green is too dark on the page, so step lines and primary buttons
-         use one lighter green (#3DB27C), with white text on the buttons.
-         The step line rule has an extra .stApp so it beats the later, equal-specificity rule below. */
+      /* In dark mode the deep green is too dark on the page, so the step lines use a lighter green (#3DB27C).
+         The step line rule has an extra .stApp so it beats the later, equal-specificity rule below.
+         Dark-mode primary buttons are set further down in Python, so they follow the theme chosen in Settings. */
       @media (prefers-color-scheme: dark) {
         .stApp div.wapas-hero ol.wapas-steps li { border-top-color: #3DB27C; }
-        [data-testid="stBaseButton-primary"], [data-testid="stBaseLinkButton-primary"] {
-          background-color: #3DB27C; border-color: #3DB27C; }
-        [data-testid="stBaseButton-primary"]:hover, [data-testid="stBaseLinkButton-primary"]:hover {
-          background-color: #2F9A69; border-color: #2F9A69; }
-        [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primary"] *,
-        [data-testid="stBaseLinkButton-primary"], [data-testid="stBaseLinkButton-primary"] * { color: #FFFFFF; }
       }
 
       /* Easy to tap: buttons, tabs, answer options and expanders are at least 44px tall */
@@ -169,6 +163,13 @@ st.markdown(
          The overlay is the full-screen [data-testid="stDialog"]; the pop-up box inside it is not blurred. */
       [data-testid="stDialog"] { background: rgba(127, 127, 127, 0.12) !important;
                                  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+
+      /* Keyboard focus: a clear 2px outline on buttons, links, tabs and the Yes/No choices. #3D7EFF is 3.7:1 on
+         white and 5.1:1 on the dark page. An outline is separate from the box-shadow used by our hover, press
+         and glow styles, so those cannot hide it. :focus-visible keeps it off for mouse clicks. */
+      button:focus-visible, a:focus-visible, [role="tab"]:focus-visible, summary:focus-visible,
+      [data-testid="stRadioOption"]:has(input:focus-visible) {
+        outline: 2px solid #3D7EFF !important; outline-offset: 2px; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -298,6 +299,32 @@ with st.container(key="text_size_box"):
 # A style-only st.html takes up no space on the page
 st.html(f"<style>html {{ font-size: {TEXT_SIZES.get(st.session_state.get('text_size'), 100)}% !important; }}</style>")
 
+# Dark-mode primary buttons. CSS cannot see the theme the visitor picks in Streamlit's Settings (a media query only
+# sees the device), so Python adds these rules when Streamlit reports a dark theme. After a theme change in Settings
+# the buttons can keep the old colours until the next click. If the theme is unknown, the light colours stay.
+if st.context.theme.get("type") == "dark":
+    st.html("""
+    <style>
+      [data-testid="stBaseButton-primary"], [data-testid="stBaseLinkButton-primary"] {
+        background-color: #278058; border-color: #278058; }
+      [data-testid="stBaseButton-primary"]:hover, [data-testid="stBaseLinkButton-primary"]:hover {
+        background-color: #1F6B49; border-color: #1F6B49; }
+      [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primary"] *,
+      [data-testid="stBaseLinkButton-primary"], [data-testid="stBaseLinkButton-primary"] * { color: #FFFFFF; }
+      /* Disabled primary buttons: a muted green with light text, so they look off but stay readable */
+      [data-testid="stBaseButton-primary"]:disabled, [data-testid="stBaseButton-primary"]:disabled:hover {
+        background-color: #2F5A46; border-color: #2F5A46; }
+      [data-testid="stBaseButton-primary"]:disabled, [data-testid="stBaseButton-primary"]:disabled * { color: #D7EDE0; }
+    </style>
+    """)
+
+# Light-mode captions. Streamlit's grey is about 3.7:1 on white, so a darker grey (#5F6368, 6.05:1) is used.
+# It is still softer than the main text. Dark mode is left as it is.
+if st.context.theme.get("type") == "light":
+    st.html("""<style>
+      [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p { color: #5F6368 !important; }
+    </style>""")
+
 # ---------------------------------------------------------------------------
 # Header
 # ---------------------------------------------------------------------------
@@ -305,7 +332,7 @@ st.markdown(
     """
     <div class="wapas-hero">
       <h1 class="wapas-name">Wapas</h1>
-      <p class="wapas-meaning">वापस means &ldquo;back&rdquo; in Hindi.</p>
+      <p class="wapas-meaning"><span lang="hi">वापस</span> means &ldquo;back&rdquo; in Hindi.</p>
       <p class="wapas-promise">If your bank account was frozen because of someone else&rsquo;s scam,
         Wapas gives you a clear plan and a letter to ask your bank to release it.</p>
       <ol class="wapas-steps">
@@ -484,9 +511,10 @@ with tab_new:
 
             if q3 == "Yes":
                 # Honest route: no innocence letter for people who lent their account
-                st.error("Because you let someone else use your account, this is serious. "
+                st.error("**Important**\n\n"
+                         "Because you let someone else use your account, this is serious. "
                          "Please don't send a letter saying you're innocent. Get legal advice first. "
-                         "You may qualify for free legal aid.")
+                         "You may qualify for free legal aid.", icon=":material/warning:")
                 st.link_button("Ask NALSA (15100) if you qualify for free legal aid", "tel:15100",
                                type="primary", width="stretch", key="call_nalsa")
                 for _, r in L.rules_for(rules_df, "lent").iterrows():

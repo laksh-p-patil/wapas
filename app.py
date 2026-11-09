@@ -269,18 +269,18 @@ with tab_new:
             st.warning("Paste a message first, or click Use example SMS.")
         else:
             with st.spinner("Reading your message..."):
-                details, method, error = L.extract_details(sms, provider, api_key, model)
+                details = L.extract_without_ai(sms)
             for field in L.DETAIL_FIELDS:
                 st.session_state["f_" + field] = details[field]
-            st.session_state.extract_method = method
-            st.session_state.extract_error = error if ai_on else None
+            st.session_state.extract_method = "pattern matching on this device"
+            st.session_state.extract_error = None
             st.session_state.details_ready = True
             st.session_state.show_result = False
             st.session_state.letter_ready = False
 
     if st.session_state.details_ready:
         st.subheader("2. Check your details")
-        st.caption(f"Found using: {st.session_state.extract_method}. Correct anything that's wrong.")
+        st.caption("Correct any of the details that you may feel is incorrect.")
         if st.session_state.extract_error:
             st.caption(f"AI problem: {st.session_state.extract_error}")
 
@@ -354,17 +354,15 @@ with tab_new:
                 st.subheader("5. Your letter")
                 if not st.session_state.letter_ready:
                     with st.spinner("Writing your letter..."):
-                        if ai_on:
-                            letter, method, error = L.ai_letter(details, rules_df, provider, api_key, model)
-                        else:
-                            letter, method, error = L.template_letter(details, rules_df), "fixed template (AI off)", None
+                        letter, method, error = (L.template_letter(details, rules_df),
+                                                 "Letter written from a standard template. Not sent to any AI.", None)
                     st.session_state.letter_box = letter
                     st.session_state.letter_original = letter  # to tell later if the user edited it
                     st.session_state.letter_method = method
                     st.session_state.letter_error = error
                     st.session_state.letter_ready = True
 
-                st.caption(f"Written using: {st.session_state.letter_method}. Check every detail before sending.")
+                st.caption("Letter written from a standard template. Not sent to any AI. Check every detail before sending.")
                 if st.session_state.get("letter_error"):
                     st.caption(f"AI problem: {st.session_state.letter_error}")
                 st.text_area("You can edit the letter here", key="letter_box", height=460)

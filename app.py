@@ -315,16 +315,31 @@ with tab_new:
                 st.caption("Letter written from a standard template. Not sent to any AI. Check every detail before sending.")
                 st.text_area("You can edit the letter here", key="letter_box", height=460)
 
+                # Group 1: send the letter
+                st.caption("Send your letter")
+                subject = f"Request to limit the debit freeze on account ending {details['last4']}"
                 b1, b2, b3 = st.columns(3)
                 b1.download_button("Download letter", icon=":material/download:", data=st.session_state.letter_box,
                                    file_name=f"wapas_letter_{details['last4'] or 'case'}.txt")
-                if b2.button("Rewrite letter", icon=":material/edit:"):
+                b2.link_button("Share on WhatsApp", L.whatsapp_link(st.session_state.letter_box),
+                               icon=":material/chat:")
+                b3.link_button("Send by email", L.email_link(subject, st.session_state.letter_box),
+                               icon=":material/mail:")
+                st.caption("Share it with a family member or lawyer to check, or open your email app "
+                           "with the letter ready to send to the bank.")
+
+                st.space("small")
+
+                # Group 2: change the letter or keep the case
+                st.caption("Change or keep your case")
+                k1, k2, _ = st.columns(3)  # the two buttons line up under the first two above
+                if k1.button("Rewrite letter", icon=":material/edit:"):
                     if st.session_state.letter_box != st.session_state.letter_original:
                         st.session_state.confirm_rewrite = True  # they edited it, so ask first
                     else:
                         st.session_state.letter_ready = False
                         st.rerun()
-                if b3.button("Save this case", icon=":material/save:", type="primary"):
+                if k2.button("Save this case", icon=":material/save:", type="primary"):
                     case_id = save_my_case(details, st.session_state.letter_box)
                     st.success(f"Saved as case #{case_id}. Open My cases to track it.")
                 st.caption("Your case is kept only while this tab is open. Refresh or close it and it's gone. "
@@ -340,15 +355,6 @@ with tab_new:
                     if r2.button("Keep my edits"):
                         st.session_state.confirm_rewrite = False
                         st.rerun()
-
-                subject = f"Request to limit the debit freeze on account ending {details['last4']}"
-                s1, s2 = st.columns(2)
-                s1.link_button("Share on WhatsApp", L.whatsapp_link(st.session_state.letter_box),
-                               icon=":material/chat:")
-                s2.link_button("Send by email", L.email_link(subject, st.session_state.letter_box),
-                               icon=":material/mail:")
-                st.caption("Share it with a family member or lawyer to check, or open your email app "
-                           "with the letter ready to send to the bank.")
 
                 st.info("**What to do next**\n\n"
                         "1. Fill in anything still in [square brackets] and check every detail.\n"

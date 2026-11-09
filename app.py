@@ -289,14 +289,23 @@ with tab_new:
 
                 st.subheader("4. Your plan")
                 plan_rules = L.rules_for(rules_df, "frozen")
-                for number, (_, r) in enumerate(plan_rules.iterrows(), start=1):
-                    st.markdown(f"**{number}.** {r['rule']}")
-                    st.caption(f"Source: {r['source']}. Last checked: {r['last_verified']}.")
+                st.info("**Do this now**\n\n"
+                        "1. Ask your bank for the freeze details: police station, case or FIR number, date, legal sections.\n"
+                        "2. Ask that only the disputed amount is held, not the whole account.\n"
+                        "3. Use the official grievance redressal mechanism first.")
+                plan_open = st.session_state.get("plan_details_open", False)
+                if st.button("Hide full details" if plan_open else "Show full details"):
+                    st.session_state.plan_details_open = not plan_open
+                    st.rerun()
+                if st.session_state.get("plan_details_open"):
+                    for number, (_, r) in enumerate(plan_rules.iterrows(), start=1):
+                        st.markdown(f"**{number}.** {r['rule']}")
+                        st.caption(f"Source: {r['source']}. Last checked: {r['last_verified']}.")
 
                 st.subheader("5. Your letter")
                 if not st.session_state.letter_ready:
                     with st.spinner("Writing your letter..."):
-                        letter, method = (L.template_letter(details, rules_df),
+                        letter, method = (L.template_letter(details, rules_df, knows_payer=(q2 == "Yes")),
                                           "Letter written from a standard template. Not sent to any AI.")
                     st.session_state.letter_box = letter
                     st.session_state.letter_original = letter  # to tell later if the user edited it

@@ -155,6 +155,7 @@ st.markdown(
         @keyframes wapas-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
         @keyframes wapas-fade { from { opacity: 0; } to { opacity: 1; } }
         @keyframes wapas-slide { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+        @keyframes wapas-pop { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
 
         /* The three step cards rise in one after another, 0.4s each */
         div.wapas-hero ol.wapas-steps li { animation: wapas-rise 0.4s ease-out both; }
@@ -184,6 +185,17 @@ st.markdown(
         /* Success, warning and info boxes slide in once when they appear (the "Do this now" box already fades) */
         [data-testid="stAlert"] { animation: wapas-slide 0.3s ease-out; }
         .st-key-do_now [data-testid="stAlert"] { animation: none; }
+
+        /* Yes/No answers: the fill eases to the chosen option, which pops once; the others lift on hover */
+        [data-testid="stRadioOption"] { transition: transform 0.15s ease; }
+        [data-testid="stRadioOption"] * { transition: background-color 0.2s ease, border-color 0.2s ease; }
+        [data-testid="stRadioOption"]:has(input:checked) { animation: wapas-pop 0.2s ease-out; }
+        [data-testid="stRadioOption"]:not(:has(input:checked)):hover { transform: translateY(-2px); }
+
+        /* The three questions fade in one after another when they first appear */
+        .st-key-q1, .st-key-q2, .st-key-q3 { animation: wapas-fade 0.3s ease-out both; }
+        .st-key-q2 { animation-delay: 0.15s; }
+        .st-key-q3 { animation-delay: 0.3s; }
       }
     </style>
     """,

@@ -49,11 +49,19 @@ st.markdown(
       .stTabs [aria-selected="true"] { color: #1B6B4A; }
       .stTabs [aria-selected="true"], .stTabs [aria-selected="true"] p { font-weight: 700; }
       .stTabs [data-baseweb="tab-highlight"] { background-color: #1B6B4A; }
-      /* In dark mode the deep green is too dark on the page, so tabs and step lines use a lighter green */
+      /* In dark mode the deep green is too dark on the page, so tabs, step lines and primary buttons
+         use one lighter green (#3DB27C), with white text on the buttons.
+         The step line rule has an extra .stApp so it beats the later, equal-specificity rule below. */
       @media (prefers-color-scheme: dark) {
-        .stTabs [aria-selected="true"], .stTabs [aria-selected="true"] p { color: #4FD08F; }
-        .stTabs [data-baseweb="tab-highlight"] { background-color: #4FD08F; }
-        div.wapas-hero ol.wapas-steps li { border-top-color: #3FA77A; }
+        .stTabs [aria-selected="true"], .stTabs [aria-selected="true"] p { color: #5FE0A3; }
+        .stTabs [data-baseweb="tab-highlight"] { background-color: #3DB27C; }
+        .stApp div.wapas-hero ol.wapas-steps li { border-top-color: #3DB27C; }
+        [data-testid="stBaseButton-primary"], [data-testid="stBaseLinkButton-primary"] {
+          background-color: #3DB27C; border-color: #3DB27C; }
+        [data-testid="stBaseButton-primary"]:hover, [data-testid="stBaseLinkButton-primary"]:hover {
+          background-color: #2F9A69; border-color: #2F9A69; }
+        [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primary"] *,
+        [data-testid="stBaseLinkButton-primary"], [data-testid="stBaseLinkButton-primary"] * { color: #FFFFFF; }
       }
 
       /* Easy to tap: buttons, tabs, answer options and expanders are at least 44px tall */

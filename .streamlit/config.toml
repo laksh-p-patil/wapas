@@ -2,7 +2,7 @@
 primaryColor = "#1B6B4A"
 
 [theme.dark]
-primaryColor = "#2E8B63"
+primaryColor = "#3DB27C"
 
 [browser]
 gatherUsageStats = false

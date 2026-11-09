@@ -4,7 +4,7 @@ app.py  -  the screens of Wapas (the part people see).
 HOW TO RUN (Windows): double-click START_WAPAS.bat
    or type in a terminal inside this folder:   python -m streamlit run app.py
 
-This file only draws the screens. All the real work (AI, rules, letters,
+This file only draws the screens. All the real work (rules, letters,
 database) happens in wapas_logic.py.
 """
 
@@ -117,8 +117,8 @@ def secret(name, default=""):
         return default
 
 
-# Owner mode: add ADMIN_MODE = true to your local .streamlit/secrets.toml to see the
-# AI settings and edit the rules. Leave it out on the public site.
+# Owner mode: add ADMIN_MODE = true to your local .streamlit/secrets.toml to edit
+# the rules. Leave it out on the public site.
 admin = str(secret("ADMIN_MODE")).strip().lower() in ("true", "1", "yes")
 
 # ---------------------------------------------------------------------------
@@ -296,17 +296,14 @@ with tab_new:
                 st.subheader("5. Your letter")
                 if not st.session_state.letter_ready:
                     with st.spinner("Writing your letter..."):
-                        letter, method, error = (L.template_letter(details, rules_df),
-                                                 "Letter written from a standard template. Not sent to any AI.", None)
+                        letter, method = (L.template_letter(details, rules_df),
+                                          "Letter written from a standard template. Not sent to any AI.")
                     st.session_state.letter_box = letter
                     st.session_state.letter_original = letter  # to tell later if the user edited it
                     st.session_state.letter_method = method
-                    st.session_state.letter_error = error
                     st.session_state.letter_ready = True
 
                 st.caption("Letter written from a standard template. Not sent to any AI. Check every detail before sending.")
-                if st.session_state.get("letter_error"):
-                    st.caption(f"AI problem: {st.session_state.letter_error}")
                 st.text_area("You can edit the letter here", key="letter_box", height=460)
 
                 b1, b2, b3 = st.columns(3)

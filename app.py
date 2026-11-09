@@ -304,10 +304,31 @@ def start_new_case():
     st.session_state.show_result = False
     st.session_state.letter_ready = False
     st.session_state.confirm_rewrite = False
+    st.session_state.reminder_clicked = False
 
 
 def toast_download():
     st.toast("Download started", icon=":material/check_circle:")
+
+
+def note_reminder_click():
+    st.session_state.reminder_clicked = True
+
+
+def reminder_ics():
+    """A tiny calendar file with one all-day event 15 days from today. It holds nothing from the case."""
+    today = date.today()
+    due = today + timedelta(days=15)
+    title = "Check your bank's reply about your frozen account"
+    note = "Open Wapas, check whether the bank replied, and use the follow-up letter if it has not."
+    escape = lambda text: text.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,")
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Wapas//Reminder//EN", "BEGIN:VEVENT",
+             f"UID:wapas-day15-{due:%Y%m%d}@wapas", f"DTSTAMP:{today:%Y%m%d}T000000Z",
+             f"DTSTART;VALUE=DATE:{due:%Y%m%d}", f"DTEND;VALUE=DATE:{due + timedelta(days=1):%Y%m%d}",
+             f"SUMMARY:{escape(title)}", f"DESCRIPTION:{escape(note)}", "END:VEVENT", "END:VCALENDAR"]
+    # Calendar files use CRLF line ends and fold long lines after 75 characters
+    folded = ["\r\n ".join(line[i:i + 74] for i in range(0, len(line), 74)) for line in lines]
+    return "\r\n".join(folded) + "\r\n"
 
 
 # Cases are kept only in this visitor's browser tab, never in a shared file,
@@ -500,11 +521,25 @@ with tab_new:
                         st.session_state.confirm_rewrite = False
                         st.rerun()
 
+                st.download_button("Add day-15 reminder", icon=":material/event:", key="add_reminder",
+                                   data=reminder_ics(), file_name="wapas-day-15-reminder.ics",
+                                   mime="text/calendar", on_click=note_reminder_click)
+                st.caption("Adds a calendar event on day 15 to check if your bank replied. "
+                           "The file has none of your details.")
+                if st.session_state.get("reminder_clicked"):
+                    st.info("Your reminder file is on its way. Open it to add the event to your calendar. "
+                            "On that day, check whether your bank replied. If it has not, open Wapas and use "
+                            "the follow-up letter. Day 15 is a check-in date set by Wapas, not a legal deadline. "
+                            "Cases like this can take time. Keep copies of everything and write down every date. "
+                            "Wapas does not keep your case, so download your letter too.")
+
                 st.info("**What to do next**\n\n"
                         "1. Fill in anything still in [square brackets] and check every detail.\n"
                         "2. Send the letter to your bank branch manager. Keep a copy.\n"
                         "3. Note the date you sent it, and set the case status to \"Sent to bank\" in My cases.\n"
-                        "4. If the bank has not replied in 15 days, send the follow-up letter from My cases.")
+                        "4. If the bank has not replied in 15 days, send the follow-up letter from My cases.\n\n"
+                        "This can take time. Keep copies of every letter and reply, and write down dates. "
+                        "Wapas cannot speed up your bank.")
 
         st.button("Start a new case", on_click=start_new_case)
 

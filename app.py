@@ -450,16 +450,14 @@ with tab_cases:
         st.write(f"Next follow-up: **{case['follow_up']}**")
         if st.button("Simulate day 15"):
             with st.spinner("Writing a follow-up letter..."):
-                if ai_on:
-                    text, method, error = L.ai_followup(case, provider, api_key, model)
-                else:
-                    text, method, error = L.template_followup(case), "fixed template (AI off)", None
+                text, method, error = (L.template_followup(case),
+                                       "Letter written from a standard template. Not sent to any AI.", None)
             st.session_state.followups[chosen] = (text, method)
 
         if chosen in st.session_state.followups:
             text, method = st.session_state.followups[chosen]
             st.warning(f"Day 15 reminder: no reply yet on case #{chosen}? Send this follow-up today.")
-            st.caption(f"Written using: {method}.")
+            st.caption("Letter written from a standard template. Not sent to any AI. Check every detail before sending.")
             st.text_area("Follow-up letter", value=text, height=300, key=f"followup_box_{chosen}")
             st.download_button("Download follow-up", data=text, file_name=f"wapas_followup_{chosen}.txt")
 

@@ -364,8 +364,6 @@ with tab_new:
             st.session_state.extract_method = "pattern matching on this device"
             st.session_state.extract_error = None
             st.session_state.details_ready = True
-            st.session_state.show_result = False
-            st.session_state.letter_ready = False
 
     if st.session_state.details_ready:
         st.subheader("2. Check your details")
@@ -396,15 +394,7 @@ with tab_new:
         q3 = st.radio("Did you ever let someone else use your bank account or UPI?",
                       ["Yes", "No"], index=None, horizontal=True, key="q3")
 
-        if st.button("Show my plan and letter", type="primary"):
-            if None in (q1, q2, q3):
-                st.warning("Please answer all three questions.")
-            else:
-                st.session_state.show_result = True
-                st.session_state.letter_ready = False
-                st.session_state.confirm_rewrite = False
-
-        if st.session_state.show_result and None not in (q1, q2, q3):
+        if None not in (q1, q2, q3):
             details = {f: st.session_state["f_" + f] for f in ["name"] + L.DETAIL_FIELDS}
             details["last4"] = L.only_last4(details["last4"])
 
@@ -441,6 +431,17 @@ with tab_new:
                         st.caption(f"Source: {r['source']}. Last checked: {r['last_verified']}.")
 
                 st.subheader("5. Your letter")
+                inputs = (tuple(details.values()), q2 == "Yes")  # what the letter is built from
+                if st.session_state.letter_ready and "letter_box" not in st.session_state:
+                    # the box was not on screen for a run (for example question 3 was Yes), so Streamlit
+                    # dropped its text; put back the last text the visitor had
+                    st.session_state.letter_box = st.session_state.get("letter_saved", "")
+                if st.session_state.letter_ready and inputs != st.session_state.get("letter_inputs"):
+                    if st.session_state.letter_box == st.session_state.letter_original:
+                        st.session_state.letter_ready = False  # not edited, so write it again
+                    else:
+                        st.session_state.confirm_rewrite = True  # edited, so keep it and offer Reset
+                        st.session_state.letter_inputs = inputs
                 if not st.session_state.letter_ready:
                     with st.spinner("Writing your letter..."):
                         letter, method = (L.template_letter(details, rules_df, knows_payer=(q2 == "Yes")),
@@ -448,10 +449,12 @@ with tab_new:
                     st.session_state.letter_box = letter
                     st.session_state.letter_original = letter  # to tell later if the user edited it
                     st.session_state.letter_method = method
+                    st.session_state.letter_inputs = inputs
                     st.session_state.letter_ready = True
 
                 st.caption("Letter written from a standard template. Not sent to any AI. Check every detail before sending.")
                 st.text_area("You can edit the letter here", key="letter_box", height=460)
+                st.session_state.letter_saved = st.session_state.letter_box
 
                 # Group 1: send the letter
                 st.caption("Send your letter")

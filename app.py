@@ -164,6 +164,11 @@ st.markdown(
       /* The Accessibility button sits at the top right; its pop-up never grows wider than the screen */
       .st-key-text_size_box { align-items: flex-end; }
       [data-testid="stPopoverBody"] { max-width: calc(100vw - 2rem); }
+
+      /* Pop-ups (st.dialog): blur the page behind them and dim it only a little, in light and dark mode.
+         The overlay is the full-screen [data-testid="stDialog"]; the pop-up box inside it is not blurred. */
+      [data-testid="stDialog"] { background: rgba(127, 127, 127, 0.12) !important;
+                                 -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
     </style>
     """,
     unsafe_allow_html=True,

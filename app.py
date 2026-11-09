@@ -16,7 +16,8 @@ import streamlit as st
 
 import wapas_logic as L
 
-st.set_page_config(page_title="Wapas", page_icon="🔓", layout="centered")
+st.set_page_config(page_title="Wapas", page_icon="🔓", layout="centered",
+                   initial_sidebar_state="collapsed")
 
 # Styling: type sizes, tap sizes, phone layout, and the opening
 st.markdown(
@@ -119,51 +120,6 @@ def secret(name, default=""):
 # Owner mode: add ADMIN_MODE = true to your local .streamlit/secrets.toml to see the
 # AI settings and edit the rules. Leave it out on the public site.
 admin = str(secret("ADMIN_MODE")).strip().lower() in ("true", "1", "yes")
-
-# On the public site the AI settings come only from Streamlit's Secrets settings
-providers = ["gemini", "openai", "anthropic"]
-saved_provider = secret("PROVIDER", "gemini")
-provider = saved_provider if saved_provider in providers else "gemini"
-api_key = secret("API_KEY")
-model = secret("MODEL") or L.DEFAULT_MODELS[provider]
-
-# ---------------------------------------------------------------------------
-# Sidebar: settings (AI settings only in owner mode)
-# ---------------------------------------------------------------------------
-with st.sidebar:
-    st.header("Settings")
-    if admin:
-        provider = st.selectbox(
-            "AI provider", providers,
-            index=providers.index(saved_provider) if saved_provider in providers else 0,
-        )
-        typed_key = st.text_input("API key", type="password",
-                                  help="Leave this empty if you saved your key in .streamlit/secrets.toml")
-        api_key = typed_key.strip() or secret("API_KEY")
-
-        default_model = secret("MODEL") if provider == saved_provider and secret("MODEL") else L.DEFAULT_MODELS[provider]
-        model = st.text_input("Model name", value=default_model,
-                              help="If you get a 'model not found' error, copy a current model name from your provider's website.")
-
-    if admin:
-        if st.button("Test AI connection"):
-            with st.spinner("Checking..."):
-                answer, error = L.ask_ai(provider, api_key, model, "Reply with the single word: connected")
-            if answer:
-                st.success(f"AI is working ({model}).")
-            else:
-                st.error(error)
-        st.caption("If the AI is off or fails, Wapas uses fixed templates, so the app keeps working.")
-
-ai_on = bool(api_key)
-
-# The AI status is for the owner only, and lives in the sidebar, not the main screen
-if admin:
-    with st.sidebar:
-        if ai_on:
-            st.caption(f"AI is on ({provider}, {model}).")
-        else:
-            st.caption("AI is off, so Wapas is using fixed templates. Add an API key to turn it on.")
 
 # ---------------------------------------------------------------------------
 # Header
@@ -279,8 +235,6 @@ with tab_new:
     if st.session_state.details_ready:
         st.subheader("2. Check your details")
         st.caption("Correct any of the details that you may feel is incorrect.")
-        if st.session_state.extract_error:
-            st.caption(f"AI problem: {st.session_state.extract_error}")
 
         with st.expander("What do these words mean?"):
             st.markdown("- **FIR** (First Information Report): the police's written record of a complaint. "

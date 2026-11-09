@@ -154,6 +154,7 @@ st.markdown(
       @media (prefers-reduced-motion: no-preference) {
         @keyframes wapas-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
         @keyframes wapas-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes wapas-slide { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
 
         /* The three step cards rise in one after another, 0.4s each */
         div.wapas-hero ol.wapas-steps li { animation: wapas-rise 0.4s ease-out both; }
@@ -168,8 +169,21 @@ st.markdown(
         [data-testid="stDownloadButton"] button:not(:disabled):hover,
         [data-testid="stLinkButton"] a:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18); }
 
+        /* Buttons shrink slightly while pressed */
+        [data-testid="stButton"] button:not(:disabled):active,
+        [data-testid="stDownloadButton"] button:not(:disabled):active,
+        [data-testid="stLinkButton"] a:active { transform: scale(0.97); transition: transform 0.1s ease; }
+
         /* The "Do this now" box and the letter box fade in when they appear */
         .st-key-do_now, .st-key-letter_box { animation: wapas-fade 0.3s ease-out; }
+
+        /* Switching tabs: the new tab's content fades in and the underline slides */
+        [data-baseweb="tab-panel"] { animation: wapas-fade 0.25s ease-out; }
+        .stTabs [data-baseweb="tab-highlight"] { transition: transform 0.25s ease, left 0.25s ease, width 0.25s ease; }
+
+        /* Success, warning and info boxes slide in once when they appear (the "Do this now" box already fades) */
+        [data-testid="stAlert"] { animation: wapas-slide 0.3s ease-out; }
+        .st-key-do_now [data-testid="stAlert"] { animation: none; }
       }
     </style>
     """,

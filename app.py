@@ -521,3 +521,14 @@ with tab_rules:
             st.session_state.letter_ready = False  # next letter uses the new rules
             st.session_state.flash = "Rules saved. New plans and letters will use them."
             st.rerun()
+
+# ---------------------------------------------------------------------------
+# Footer: shown under every tab. The date is the oldest "last checked" date in the rules table.
+# ---------------------------------------------------------------------------
+try:
+    oldest = pd.to_datetime(rules_df["last_verified"], errors="coerce").min()
+    footer = (f"Rules last checked on {oldest.day} {oldest:%B %Y}. Not legal advice."
+              if pd.notna(oldest) else "Rules last checked: date unavailable")
+except Exception:
+    footer = "Rules last checked: date unavailable"
+st.caption(footer)

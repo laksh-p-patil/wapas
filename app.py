@@ -318,6 +318,8 @@ with tab_new:
                 if b3.button("Save this case", type="primary"):
                     case_id = save_my_case(details, st.session_state.letter_box)
                     st.success(f"Saved as case #{case_id}. Open My cases to track it.")
+                st.caption("Your case is kept only while this tab is open. Refresh or close it and it's gone. "
+                           "Download your letter to keep it.")
 
                 if st.session_state.confirm_rewrite:
                     st.warning("You edited this letter. Rewriting replaces your edits with a new letter.")

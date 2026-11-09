@@ -11,6 +11,7 @@ This file has NO screens in it. It only does the work:
 The screens are in app.py. app.py calls the functions in this file.
 """
 
+import json
 import re
 import sqlite3
 from urllib.parse import quote
@@ -168,6 +169,53 @@ Yours faithfully,
 """
 
 
+def template_grievance_letter(stage, case, reference="", registered="", decided=""):
+    """Fixed letter for the next step of the grievance process in the MHA SOP dated 02.01.2026 (Clause 10).
+    stage 1: the police officer did not act in time, so the grievance went to the District Grievance Officer.
+    stage 2: the police officer rejected it, so the person asks the District Grievance Officer for a review.
+    stage 3: the District Grievance Officer rejected the review, so the person appeals to the State Grievance Officer.
+    It uses only the bank, last 4 digits, amount and freeze date from the case, and the three typed fields."""
+    ref = _blank(reference, "grievance reference number")
+    registered_on = _blank(registered, "date the bank registered the grievance")
+    decided_on = _blank(decided, "date of the decision")
+    officer = "The State Grievance Officer" if stage == 3 else "The District Grievance Officer"
+    subject = {
+        1: f"Request to decide my grievance, reference {ref}",
+        2: f"Request to review the decision on my grievance, reference {ref}",
+        3: f"Appeal against the decision on my review, reference {ref}",
+    }[stage]
+    what_happened = {
+        1: "The police officer did not act on it in time, so it went to the District Grievance Officer.",
+        2: f"The police officer rejected my grievance on {decided_on}.",
+        3: f"The District Grievance Officer rejected my review on {decided_on}.",
+    }[stage]
+    request = {
+        1: "I request you to decide my grievance as the MHA SOP dated 02.01.2026 (Clause 10) provides.",
+        2: "I ask you to review the decision as the MHA SOP dated 02.01.2026 (Clause 10) provides.",
+        3: "I appeal to you to review the decision as the MHA SOP dated 02.01.2026 (Clause 10) provides.",
+    }[stage]
+    return f"""To,
+{officer}
+
+Date: {date.today().strftime('%d %B %Y')}
+
+Subject: {subject}
+
+Dear Sir/Madam,
+
+A debit freeze was placed on my account ending {_blank(case.get('last4'), 'last 4 digits')} at {_blank(case.get('bank'), 'bank name')} on {_blank(case.get('freeze_date'), 'date of freeze')}. The amount in dispute is {_blank(case.get('amount'), 'amount')}.
+
+The bank registered my grievance on {registered_on}. The reference number is {ref}. {what_happened}
+
+{request}
+
+I am ready to cooperate and provide any documents required.
+
+Yours faithfully,
+[your full name]
+"""
+
+
 # ---------------------------------------------------------------------------
 # 5. Saving cases (a small SQLite database file)
 # ---------------------------------------------------------------------------
@@ -246,3 +294,76 @@ def case_stats(cases_df):
         "resolved": int(cases_df["status"].isin(RESOLVED_STATUSES).sum()),
         "by_status": cases_df["status"].value_counts().to_dict(),
     }
+
+
+# ---------------------------------------------------------------------------
+# 7. Case files: the visitor can download their cases and open them again later
+# ---------------------------------------------------------------------------
+CASE_STATUSES = ["Letter ready to send", "Sent to bank", "Bank replied",
+                 "Freeze limited or removed", "Escalated to legal aid"]
+CASE_FILE_FIELDS = ["bank", "branch", "last4", "amount", "freeze_date", "police", "case_no", "name",
+                    "status", "created", "letter"]
+MAX_CASE_FILE_BYTES = 100 * 1024
+MAX_CASES_IN_FILE = 20
+MAX_SHORT_TEXT = 60
+MAX_LETTER_TEXT = 5000
+
+
+def cases_to_json(cases):
+    """The cases as JSON text, in memory only. Only the fields in CASE_FILE_FIELDS are written."""
+    return json.dumps({"version": 1, "cases": [{key: str(case.get(key, "")) for key in CASE_FILE_FIELDS}
+                                                for case in cases]}, ensure_ascii=False, indent=2)
+
+
+def _has_control_characters(text, allow_line_breaks):
+    allowed = "\n\r\t" if allow_line_breaks else ""
+    return any((ord(ch) < 32 and ch not in allowed) or ord(ch) == 127 for ch in text)
+
+
+def read_cases_file(raw):
+    """Check an uploaded case file strictly. Returns a list of clean cases, or None if anything is wrong.
+    The file is only parsed as JSON text: nothing in it is run, evaluated or turned into HTML.
+    Rules: at most 100 KB; valid UTF-8 JSON; an object with version 1 and a list "cases" of 1 to 20 objects;
+    only the keys in CASE_FILE_FIELDS are kept (every other key is dropped); status and created are required;
+    every value is a string no longer than 60 characters (5000 for the letter) with no control characters
+    (the letter may have line breaks); last4 is at most 4 digits; status is one of CASE_STATUSES;
+    created is a real date written YYYY-MM-DD."""
+    try:
+        if raw is None or len(raw) > MAX_CASE_FILE_BYTES:
+            return None
+        data = json.loads(raw.decode("utf-8"))
+        if not isinstance(data, dict) or type(data.get("version")) is not int or data["version"] != 1:
+            return None
+        items = data.get("cases")
+        if not isinstance(items, list) or not 1 <= len(items) <= MAX_CASES_IN_FILE:
+            return None
+        cleaned = []
+        for item in items:
+            if not isinstance(item, dict):
+                return None
+            case = {}
+            for key in CASE_FILE_FIELDS:
+                if key not in item:
+                    if key in ("status", "created"):
+                        return None
+                    case[key] = ""
+                    continue
+                value = item[key]
+                if not isinstance(value, str):
+                    return None
+                if len(value) > (MAX_LETTER_TEXT if key == "letter" else MAX_SHORT_TEXT):
+                    return None
+                if _has_control_characters(value, allow_line_breaks=(key == "letter")):
+                    return None
+                case[key] = value
+            if case["status"] not in CASE_STATUSES:
+                return None
+            if not re.fullmatch(r"[0-9]{0,4}", case["last4"]):
+                return None
+            if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", case["created"]):
+                return None
+            case["follow_up"] = (date.fromisoformat(case["created"]) + timedelta(days=15)).isoformat()
+            cleaned.append(case)
+        return cleaned
+    except (ValueError, UnicodeDecodeError, RecursionError, OverflowError, TypeError):
+        return None

@@ -388,6 +388,13 @@ BRING_ITEMS = [
 ]
 
 
+NEXT_STAGES = [
+    "The police officer did not act in time and my grievance went to the District Grievance Officer",
+    "The police officer rejected my grievance and I want to ask the District Grievance Officer for a review",
+    "The District Grievance Officer rejected my review and I want to appeal to the State Grievance Officer",
+]
+
+
 def toast_download():
     st.toast("Download started", icon=":material/check_circle:")
 
@@ -651,6 +658,38 @@ with tab_cases:
     st.subheader("Case tracker")
     st.caption("Your cases last only while this tab is open. Refreshing or closing the page "
                "clears them, so download your letter to keep it.")
+
+    # Open a case file. It is read once per uploaded file, then checked strictly by L.read_cases_file.
+    # The text from the file is only ever shown through normal Streamlit widgets, never as HTML.
+    uploaded = st.file_uploader("Open a case file", type=["json"], accept_multiple_files=False,
+                                key="open_case_file", help="A file you downloaded here with Download my cases.")
+    if uploaded is None:
+        st.session_state.opened_file_id = None
+        st.session_state.opened_file_result = None
+    elif uploaded.file_id != st.session_state.get("opened_file_id"):
+        st.session_state.opened_file_id = uploaded.file_id
+        opened = L.read_cases_file(uploaded.getvalue() if uploaded.size <= L.MAX_CASE_FILE_BYTES else None)
+        if opened is None:
+            st.session_state.opened_file_result = None
+        else:
+            for opened_case in reversed(opened):  # the file lists the newest first, like the table
+                st.session_state.case_count += 1
+                opened_case["id"] = st.session_state.case_count
+            st.session_state.my_cases = opened + st.session_state.my_cases
+            st.session_state.opened_file_result = len(opened)
+    if uploaded is not None:
+        if st.session_state.get("opened_file_result") is None:
+            st.error("This is not a valid Wapas case file.")
+        else:
+            st.success(f"Opened {st.session_state.opened_file_result} saved case(s) from the file.")
+
+    if st.session_state.my_cases:
+        st.download_button("Download my cases", icon=":material/download:", key="download_cases",
+                           data=L.cases_to_json(st.session_state.my_cases), file_name="wapas-cases.json",
+                           mime="application/json", on_click="ignore")
+        st.caption("This file has your personal details. Keep it private and do not share it. "
+                   "Wapas does not keep a copy.")
+
     cases = pd.DataFrame(st.session_state.my_cases)
     if cases.empty:
         st.info("No saved cases yet. Save one from the New case tab.")
@@ -677,8 +716,7 @@ with tab_cases:
         chosen = st.selectbox("Open a case", cases["id"].tolist(), format_func=lambda i: f"Case #{i}")
         case = cases[cases["id"] == chosen].iloc[0].to_dict()
 
-        statuses = ["Letter ready to send", "Sent to bank", "Bank replied",
-                    "Freeze limited or removed", "Escalated to legal aid"]
+        statuses = L.CASE_STATUSES  # the same list a case file is checked against
         current = statuses.index(case["status"]) if case["status"] in statuses else 0
         new_status = st.selectbox("Status", statuses, index=current, key=f"status_{chosen}")
         if st.button("Update status"):
@@ -698,6 +736,22 @@ with tab_cases:
             st.caption("Letter written from a standard template. Not sent to any AI. Check every detail before sending.")
             st.text_area("Follow-up letter", value=text, height=300, key=f"followup_box_{chosen}")
             st.download_button("Download follow-up", data=text, file_name=f"wapas_followup_{chosen}.txt")
+
+        # What happened next? Letters for the later stages of the grievance process. Nothing here is saved.
+        st.subheader("What happened next?")
+        st.caption("The stages come from rule R8 in the Rules tab.")
+        next_label = st.radio("Choose one", NEXT_STAGES, index=None, key=f"next_stage_{chosen}")
+        if next_label is not None:
+            stage = NEXT_STAGES.index(next_label) + 1
+            n_ref = st.text_input("Grievance reference number", key=f"next_ref_{chosen}")
+            n_registered = st.text_input("Date the bank registered the grievance", key=f"next_registered_{chosen}")
+            n_decided = st.text_input("Date of the decision", key=f"next_decided_{chosen}") if stage > 1 else ""
+            next_letter = L.template_grievance_letter(stage, case, n_ref, n_registered, n_decided)
+            next_text = st.text_area("Your letter", value=next_letter, height=360)
+            st.download_button("Download letter", icon=":material/download:", data=next_text,
+                               file_name=f"wapas_grievance_stage_{stage}_case_{chosen}.txt",
+                               key=f"next_download_{chosen}", on_click="ignore")
+            st.caption("Check every detail before sending. Not legal advice.")
 
         with st.expander("See the first letter saved with this case"):
             st.text(case["letter"])

@@ -41,13 +41,20 @@ st.markdown(
       [data-testid="stAppDeployButton"], [data-testid="stMainMenu"],
       [data-testid="stToolbarActions"] { display: none; }
 
-      /* A darker orange, so white button text and the active tab pass contrast (5.2:1) */
+      /* A deep green, so white button text and the active tab pass contrast (6.5:1) */
       [data-testid="stBaseButton-primary"], [data-testid="stBaseLinkButton-primary"] {
-        background-color: #B94A0A; border-color: #B94A0A; }
+        background-color: #1B6B4A; border-color: #1B6B4A; }
       [data-testid="stBaseButton-primary"]:hover, [data-testid="stBaseLinkButton-primary"]:hover {
-        background-color: #9A3C07; border-color: #9A3C07; }
-      .stTabs [aria-selected="true"] { color: #B94A0A; }
-      .stTabs [data-baseweb="tab-highlight"] { background-color: #B94A0A; }
+        background-color: #14543A; border-color: #14543A; }
+      .stTabs [aria-selected="true"] { color: #1B6B4A; }
+      .stTabs [aria-selected="true"], .stTabs [aria-selected="true"] p { font-weight: 700; }
+      .stTabs [data-baseweb="tab-highlight"] { background-color: #1B6B4A; }
+      /* In dark mode the deep green is too dark on the page, so tabs and step lines use a lighter green */
+      @media (prefers-color-scheme: dark) {
+        .stTabs [aria-selected="true"], .stTabs [aria-selected="true"] p { color: #4FD08F; }
+        .stTabs [data-baseweb="tab-highlight"] { background-color: #4FD08F; }
+        div.wapas-hero ol.wapas-steps li { border-top-color: #3FA77A; }
+      }
 
       /* Easy to tap: buttons, tabs, answer options and expanders are at least 44px tall */
       [data-testid="stButton"] button, [data-testid="stDownloadButton"] button,
@@ -90,16 +97,16 @@ st.markdown(
       div.wapas-hero { margin: 0.5rem 0 1rem 0; }
       div.wapas-hero h1.wapas-name { font-size: 3.25rem; line-height: 1.05; font-weight: 800;
                                      letter-spacing: -0.02em; margin: 0; padding: 0; }
-      div.wapas-hero .wapas-meaning { color: #4A5468; margin: 0.35rem 0 0.9rem 0; }
+      div.wapas-hero .wapas-meaning { color: inherit; opacity: 0.7; margin: 0.35rem 0 0.9rem 0; }
       div.wapas-hero .wapas-promise { font-size: 1.25rem; line-height: 1.4; max-width: 36rem;
                                       margin: 0 0 1.25rem 0; text-wrap: balance; }
       div.wapas-hero ol.wapas-steps { display: grid; gap: 1rem; list-style: none; margin: 0; padding: 0;
                                       grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
-      div.wapas-hero ol.wapas-steps li { border-top: 3px solid #B94A0A; padding: 0.5rem 0 0 0; margin: 0; }
+      div.wapas-hero ol.wapas-steps li { border-top: 3px solid #1B6B4A; padding: 0.5rem 0 0 0; margin: 0; }
       div.wapas-hero ol.wapas-steps b { display: block; font-size: 1.1rem; }
-      div.wapas-hero ol.wapas-steps span { color: #4A5468; font-size: 0.95rem; }
+      div.wapas-hero ol.wapas-steps span { color: inherit; opacity: 0.7; font-size: 0.95rem; }
 
-      .wapas-note { background:#FDE9DC; color:#7A2E07; padding:10px 14px; border-radius:8px;
+      .wapas-note { background:#E3F3EA; color:#12432E; padding:10px 14px; border-radius:8px;
                     font-size:1rem; line-height: 1.5; margin: 0.25rem 0 0.75rem 0; }
       .st-key-call_nalsa a { min-height: 3.5rem; font-size: 1.3rem; font-weight: 700; }
     </style>

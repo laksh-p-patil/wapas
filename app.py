@@ -306,6 +306,10 @@ def start_new_case():
     st.session_state.confirm_rewrite = False
 
 
+def toast_download():
+    st.toast("Download started", icon=":material/check_circle:")
+
+
 # Cases are kept only in this visitor's browser tab, never in a shared file,
 # so one visitor can never see another visitor's cases.
 def save_my_case(d, letter):
@@ -455,7 +459,8 @@ with tab_new:
                 b1, b2, b3 = st.columns(3)
                 b1.download_button("Download letter", icon=":material/download:", key="download_letter",
                                    data=st.session_state.letter_box,
-                                   file_name=f"wapas_letter_{details['last4'] or 'case'}.txt")
+                                   file_name=f"wapas_letter_{details['last4'] or 'case'}.txt",
+                                   on_click=toast_download)
                 b2.link_button("Share on WhatsApp", L.whatsapp_link(st.session_state.letter_box),
                                icon=":material/chat:", key="share_whatsapp")
                 b3.link_button("Send by email", L.email_link(subject, st.session_state.letter_box),
@@ -477,6 +482,7 @@ with tab_new:
                 if k2.button("Save this case", icon=":material/save:", type="primary"):
                     case_id = save_my_case(details, st.session_state.letter_box)
                     st.success(f"Saved as case #{case_id}. Open My cases to track it.")
+                    st.toast("Case saved", icon=":material/check_circle:")
                 st.caption("Your case is kept only while this tab is open. Refresh or close it and it's gone. "
                            "Download your letter to keep it.")
 

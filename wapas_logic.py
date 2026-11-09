@@ -110,14 +110,16 @@ def _blank(value, label):
     return value.strip() if value and value.strip() else f"[{label}]"
 
 
-def template_letter(d, rules_df, knows_payer=True):
-    """Fixed letter used when the AI is off. It still uses the rules table.
-    The "did not know the payer" claim is included only when knows_payer is False."""
+def template_letter(d, rules_df, for_sale=None, knows_payer=None):
+    """Fixed letter. It still uses the rules table.
+    The "received from a customer in the normal course of my work" claim is included only when for_sale is True.
+    "I did not know the payer." is included only when knows_payer is False. A missing answer (None) leaves a claim out."""
     letter_rules = rules_for(rules_df, "frozen")
     letter_rules = letter_rules[letter_rules["use_in_letter"].str.lower() == "yes"]
     basis = "\n".join(f"- {r['rule']}" for _, r in letter_rules.iterrows())
     case_part = f" (reference {d['case_no']})" if d.get("case_no") else ""
-    payer_part = "" if knows_payer else " I did not know the payer and had no part in any fraud."
+    sale_part = " that I received from a customer in the normal course of my work" if for_sale is True else " credited to my account"
+    payer_part = " I did not know the payer." if knows_payer is False else ""
     return f"""To,
 The Branch Manager,
 {_blank(d.get('bank'), 'bank name')}, {_blank(d.get('branch'), 'branch')} branch
@@ -130,7 +132,7 @@ Dear Sir/Madam,
 
 I, {_blank(d.get('name'), 'your full name')}, hold the account ending {_blank(d.get('last4'), 'last 4 digits')} at your branch. On {_blank(d.get('freeze_date'), 'date of freeze')}, a debit freeze was placed on my account on instructions from {_blank(d.get('police'), 'police station / cyber cell')}{case_part}.
 
-I understand this is linked to a payment of {_blank(d.get('amount'), 'amount')} that I received from a customer in the normal course of my work.{payer_part}
+I understand this is linked to a payment of {_blank(d.get('amount'), 'amount')}{sale_part}.{payer_part}
 
 I request you to:
 1. Share the details of the freeze instruction: the police station, case or FIR number, date of the request and the legal sections mentioned.

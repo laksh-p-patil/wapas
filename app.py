@@ -479,7 +479,7 @@ with tab_new:
                         st.caption(f"Source: {r['source']}. Last checked: {r['last_verified']}.")
 
                 st.subheader("5. Your letter")
-                inputs = (tuple(details.values()), q2 == "Yes")  # what the letter is built from
+                inputs = (tuple(details.values()), q1 == "Yes", q2 == "Yes")  # what the letter is built from
                 if st.session_state.letter_ready and "letter_box" not in st.session_state:
                     # the box was not on screen for a run (for example question 3 was Yes), so Streamlit
                     # dropped its text; put back the last text the visitor had
@@ -492,7 +492,8 @@ with tab_new:
                         st.session_state.letter_inputs = inputs
                 if not st.session_state.letter_ready:
                     with st.spinner("Writing your letter..."):
-                        letter, method = (L.template_letter(details, rules_df, knows_payer=(q2 == "Yes")),
+                        letter, method = (L.template_letter(details, rules_df, for_sale=(q1 == "Yes"),
+                                                            knows_payer=(q2 == "Yes")),
                                           "Letter written from a standard template. Not sent to any AI.")
                     st.session_state.letter_box = letter
                     st.session_state.letter_original = letter  # to tell later if the user edited it

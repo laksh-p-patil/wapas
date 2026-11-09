@@ -108,6 +108,33 @@ st.markdown(
 )
 
 
+# Tints for the three send buttons. Light fills with dark text read well in light and dark mode.
+st.markdown(
+    """
+    <style>
+      .st-key-download_letter button, .st-key-share_whatsapp a, .st-key-send_email a,
+      .st-key-reset_letter button { border-width: 1px; }
+      .st-key-download_letter button, .st-key-download_letter button * { color: #0B3B38; }
+      .st-key-download_letter button { background-color: #D3F0EE; border-color: #8CCFCA; }
+      .st-key-download_letter button:hover { background-color: #BCE6E3; border-color: #5FB8B1; }
+
+      .st-key-share_whatsapp a, .st-key-share_whatsapp a * { color: #123B1E; }
+      .st-key-share_whatsapp a { background-color: #D9F2DF; border-color: #93CFA4; }
+      .st-key-share_whatsapp a:hover { background-color: #C4EACD; border-color: #66B87F; }
+
+      .st-key-send_email a, .st-key-send_email a * { color: #12335A; }
+      .st-key-send_email a { background-color: #DCEBFA; border-color: #9BC2EA; }
+      .st-key-send_email a:hover { background-color: #C8DFF5; border-color: #6AA3DC; }
+
+      .st-key-reset_letter button, .st-key-reset_letter button * { color: #5C3B00; }
+      .st-key-reset_letter button { background-color: #FFF1CC; border-color: #D9A93A; }
+      .st-key-reset_letter button:hover { background-color: #FCE5A6; border-color: #B8861A; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
 def secret(name, default=""):
     """Read a value from .streamlit/secrets.toml. Returns default if it isn't there."""
     try:
@@ -319,12 +346,13 @@ with tab_new:
                 st.caption("Send your letter")
                 subject = f"Request to limit the debit freeze on account ending {details['last4']}"
                 b1, b2, b3 = st.columns(3)
-                b1.download_button("Download letter", icon=":material/download:", data=st.session_state.letter_box,
+                b1.download_button("Download letter", icon=":material/download:", key="download_letter",
+                                   data=st.session_state.letter_box,
                                    file_name=f"wapas_letter_{details['last4'] or 'case'}.txt")
                 b2.link_button("Share on WhatsApp", L.whatsapp_link(st.session_state.letter_box),
-                               icon=":material/chat:")
+                               icon=":material/chat:", key="share_whatsapp")
                 b3.link_button("Send by email", L.email_link(subject, st.session_state.letter_box),
-                               icon=":material/mail:")
+                               icon=":material/mail:", key="send_email")
                 st.caption("Share it with a family member or lawyer to check, or open your email app "
                            "with the letter ready to send to the bank.")
 
@@ -333,7 +361,7 @@ with tab_new:
                 # Group 2: change the letter or keep the case
                 st.caption("Change or keep your case")
                 k1, k2, _ = st.columns(3)  # the two buttons line up under the first two above
-                if k1.button("Reset letter", icon=":material/edit:"):
+                if k1.button("Reset letter", icon=":material/edit:", key="reset_letter"):
                     if st.session_state.letter_box != st.session_state.letter_original:
                         st.session_state.confirm_rewrite = True  # they edited it, so ask first
                     else:

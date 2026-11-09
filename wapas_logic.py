@@ -27,7 +27,7 @@ DB_FILE = APP_DIR / "wapas_cases.db"
 EXAMPLE_SMS = (
     "Dear Customer, your A/c XX4417 at ABC Bank, Gandhi Bazaar branch has been marked "
     "DEBIT FREEZE on 22-09-2026 as per instructions of Cyber Crime PS, Patna "
-    "(Ack No. 31509260012345) regarding a disputed credit of Rs.150. "
+    "(Ack No. 123456789012345) regarding a disputed credit of Rs.150. "
     "Please contact your branch. - ABC Bank"
 )
 

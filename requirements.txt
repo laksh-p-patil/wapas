@@ -1,5 +1,4 @@
 streamlit>=1.36
 pandas
-google-genai
 openai
 anthropic

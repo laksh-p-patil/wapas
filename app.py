@@ -291,7 +291,10 @@ with st.container(key="text_size_box"):
         st.segmented_control("Text size", list(TEXT_SIZES), default="Normal", required=True, key="text_size",
                              wrap=True,
                              help="Makes all the text on the page bigger. Your answers and letter are not affected.")
-        st.caption("To switch between light and dark mode, open the ⋮ menu at the top right, then Settings.")
+        st.markdown("#### Light or dark mode")
+        st.markdown("1. Tap the ⋮ menu at the top right of the page.\n"
+                    "2. Tap Settings.\n"
+                    "3. Choose Light, Dark or Use system setting.")
 # A style-only st.html takes up no space on the page
 st.html(f"<style>html {{ font-size: {TEXT_SIZES.get(st.session_state.get('text_size'), 100)}% !important; }}</style>")
 

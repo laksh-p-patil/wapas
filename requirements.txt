@@ -1,4 +1,2 @@
-streamlit>=1.36
+streamlit>=1.64.0
 pandas
-openai
-anthropic

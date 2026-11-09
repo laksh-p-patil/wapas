@@ -16,7 +16,7 @@ import streamlit as st
 
 import wapas_logic as L
 
-st.set_page_config(page_title="Wapas", page_icon="🔓", layout="centered",
+st.set_page_config(page_title="Wapas", page_icon="🔓", layout="wide",
                    initial_sidebar_state="collapsed",
                    menu_items={"Get help": None, "Report a bug": None,
                                "About": "Wapas helps people with a frozen bank account write a grievance letter. "
@@ -28,10 +28,20 @@ st.set_page_config(page_title="Wapas", page_icon="🔓", layout="centered",
 st.markdown(
     """
     <style>
+      /* Layout. The page uses the wide layout, so on a laptop the main block is centered, up to about 1100px.
+         Below 700px the sides stay 1rem, like the phone layout. */
+      @media (min-width: 700px) {
+        [data-testid="stMainBlockContainer"] { max-width: 1100px !important; margin-left: auto; margin-right: auto;
+                                               padding-left: 2.5rem !important; padding-right: 2.5rem !important; }
+      }
+      @media (max-width: 699.98px) {
+        [data-testid="stMainBlockContainer"] { padding-left: 1rem !important; padding-right: 1rem !important; }
+      }
+
       /* Type. One family (Streamlit's own Source Sans); sizes and spacing tuned for phone and laptop */
       .stApp p, .stApp li, .stApp label { font-size: 1.05rem; text-wrap: pretty; }
-      /* Lines of text stay a comfortable length on a wide screen */
-      [data-testid="stMarkdownContainer"] p { max-width: 70ch; line-height: 1.55; }
+      /* Lines of text stay a comfortable length (about 75 characters) on a wide screen */
+      [data-testid="stMarkdownContainer"] p, [data-testid="stCaptionContainer"] p { max-width: 75ch; line-height: 1.55; }
       /* Captions carry sources and "check every detail", so they get a readable size */
       [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p { font-size: 0.95rem; line-height: 1.5; }
       /* Step headings are a little smaller on a phone, so they wrap less */
@@ -150,6 +160,10 @@ st.markdown(
       .wapas-amber { background-color: #FFF1CC; border: 1px solid #D9A93A; border-radius: 8px; padding: 10px 14px;
                      font-size: 1rem; line-height: 1.5; margin: 0 0 0.75rem 0; }
       .wapas-amber, .wapas-amber * { color: #5C3B00; }
+
+      /* The Accessibility button sits at the top right; its pop-up never grows wider than the screen */
+      .st-key-text_size_box { align-items: flex-end; }
+      [data-testid="stPopoverBody"] { max-width: calc(100vw - 2rem); }
     </style>
     """,
     unsafe_allow_html=True,
@@ -261,6 +275,20 @@ def secret(name, default=""):
 # Owner mode: add ADMIN_MODE = true to your local .streamlit/secrets.toml to edit
 # the rules. Leave it out on the public site.
 admin = str(secret("ADMIN_MODE")).strip().lower() in ("true", "1", "yes")
+
+# ---------------------------------------------------------------------------
+# Accessibility menu: the text size is kept in this visitor's session only (no cookies, no files).
+# It scales all the page text.
+# ---------------------------------------------------------------------------
+TEXT_SIZES = {"Normal": 100, "Large": 125, "Extra large": 150}
+with st.container(key="text_size_box"):
+    with st.popover("Accessibility", icon=":material/accessibility_new:"):
+        st.segmented_control("Text size", list(TEXT_SIZES), default="Normal", required=True, key="text_size",
+                             wrap=True,
+                             help="Makes all the text on the page bigger. Your answers and letter are not affected.")
+        st.caption("To switch between light and dark mode, open the ⋮ menu at the top right, then Settings.")
+# A style-only st.html takes up no space on the page
+st.html(f"<style>html {{ font-size: {TEXT_SIZES.get(st.session_state.get('text_size'), 100)}% !important; }}</style>")
 
 # ---------------------------------------------------------------------------
 # Header

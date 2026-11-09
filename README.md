@@ -120,13 +120,9 @@ No API key? The app still runs using its fixed templates.
 ## What's next
 
 - Voice input in Kannada and other Indian languages
-- WhatsApp as the main channel
 - More states and bank-specific procedures
 - A pilot with a legal aid cell, using real cases with consent
 - Outcome data: "what worked for people in your situation"
 
 ---
 
-## Team
-
-Built by *[add your team names here]*.
